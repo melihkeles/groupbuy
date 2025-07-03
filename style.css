@@ -1,134 +1,321 @@
+/* Genel Ayarlar ve Fontlar */
+:root {
+  /* Renk Paleti */
+  --primary-color: #2196F3; /* Mavi tonu, düğmeler için */
+  --secondary-color: #4CAF50; /* Yeşil tonu, başarı/ilerleme için */
+  --background-color: #f0f2f5; /* Açık gri arkaplan */
+  --card-background: #ffffff; /* Kartlar ve modal için beyaz */
+  --text-color-dark: #333333; /* Koyu metin */
+  --text-color-light: #666666; /* Açık metin */
+  --border-color: #e0e0e0; /* Kenarlıklar */
+  --shadow-light: rgba(0, 0, 0, 0.08); /* Hafif gölge */
+  --error-color: #f44336; /* Hata mesajları için kırmızı */
+}
+
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    margin: 0;
-    padding: 0;
-  }
-  
-  .container {
-    max-width: 500px;
-    margin: 30px auto;
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  }
-  
-  h1 {
-    font-size: 1.5rem;
-    margin-bottom: 10px;
-    text-align: center;
-  }
-  
-  .product-img {
-    width: 100%;
-    border-radius: 8px;
-    margin-bottom: 15px;
-  }
-  
-  .info p {
-    font-size: 1rem;
-    margin: 6px 0;
-  }
-  
-  .progress-bar {
-    width: 100%;
-    background: #e0e0e0;
-    border-radius: 10px;
-    overflow: hidden;
-    margin: 10px 0;
-    height: 20px;
-  }
-  
-  .progress {
-    height: 100%;
-    background-color: #4caf50;
-    width: 0%;
-    transition: width 0.5s;
-  }
-  
-  #buy-button {
-    background-color: #0077cc;
-    color: white;
-    padding: 10px;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    width: 100%;
-    cursor: pointer;
-  }
-  
-  #buy-button:hover {
-    background-color: #005fa3;
-  }
-  
-  .note {
-    text-align: center;
-    font-size: 0.85rem;
-    margin-top: 20px;
-    color: gray;
-  }
-  /* Modal Arka Plan */
+  font-family: 'Roboto', sans-serif; /* Ana metin fontu */
+  background-color: var(--background-color);
+  margin: 0;
+  padding: 0;
+  color: var(--text-color-dark);
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 500px;
+  margin: 30px auto;
+  background: var(--card-background);
+  padding: 25px; /* Biraz daha padding */
+  border-radius: 12px;
+  box-shadow: 0 4px 15px var(--shadow-light); /* Daha belirgin gölge */
+  border: 1px solid var(--border-color); /* Hafif kenarlık */
+}
+
+h1 {
+  font-family: 'Montserrat', sans-serif; /* Başlık fontu */
+  font-size: 2rem; /* Daha büyük başlık */
+  margin-bottom: 20px; /* Daha fazla boşluk */
+  text-align: center;
+  color: var(--primary-color); /* Ana renk */
+  font-weight: 700; /* Kalınlık */
+}
+
+.product-img {
+  width: 100%;
+  border-radius: 10px; /* Hafif yuvarlak köşeler */
+  margin-bottom: 25px; /* Daha fazla boşluk */
+  box-shadow: 0 2px 8px var(--shadow-light); /* Resme gölge */
+}
+
+.info p {
+  font-size: 1rem;
+  margin: 8px 0; /* Boşlukları artır */
+  color: var(--text-color-light);
+}
+
+#count-info {
+  font-size: 1.2em; /* Sayı bilgisini büyüt */
+  margin-top: 15px;
+  font-weight: bold;
+  text-align: center;
+  color: var(--text-color-dark);
+}
+
+#countdown-timer {
+  font-size: 1.4em; /* Geri sayım fontunu büyüt */
+  margin-top: 15px;
+  text-align: center;
+  color: var(--primary-color); /* Ana renkte göster */
+  font-weight: 700;
+}
+
+#time-left {
+  display: inline-block; /* Yan yana durması için */
+  margin-left: 5px;
+}
+
+.progress-bar {
+  width: 100%;
+  background: var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 20px 0; /* Boşluğu artır */
+  height: 25px; /* Yüksekliği biraz artır */
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); /* İçeriden hafif gölge */
+}
+
+.progress {
+  height: 100%;
+  background-color: var(--secondary-color);
+  width: 0%;
+  transition: width 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Yumuşak ve belirgin geçiş */
+  border-radius: 10px; /* Kenarları yuvarlak tut */
+}
+
+#buy-button {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 12px 25px; /* Daha fazla padding */
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem; /* Font boyutunu ayarla */
+  font-weight: 700; /* Kalınlaştır */
+  width: 100%;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 119, 204, 0.2); /* Butona gölge */
+  transition: background-color 0.3s ease, transform 0.2s ease; /* Hover geçişleri */
+}
+
+#buy-button:hover {
+  background-color: #005fa3; /* Hover rengi */
+  transform: translateY(-2px); /* Hafif yukarı kalkma efekti */
+}
+
+#buy-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.note {
+  text-align: center;
+  font-size: 0.9rem; /* Notu biraz küçült */
+  margin-top: 25px; /* Boşluğu artır */
+  color: var(--text-color-light);
+  font-style: italic;
+}
+
+/* Modal Arka Plan */
 .modal {
-    display: none;
-    position: fixed;
-    z-index: 10;
-    left: 0; top: 0;
-    width: 100%; height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-  }
-  
-  /* Modal İçeriği */
-  .modal-content {
-    background-color: #fff;
-    margin: 10% auto;
-    padding: 20px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 400px;
-    position: relative;
-    box-shadow: 0 0 20px rgba(0,0,0,0.2);
-  }
-  
-  .modal-content h2 {
-    margin-top: 0;
-    text-align: center;
-  }
-  
-  .modal-content input {
-    width: 100%;
-    padding: 10px;
-    margin: 8px 0;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-  }
-  
-  .modal-content .card-row {
+  display: none; /* Bu satır kalacak, modalın başlangıçta gizli olmasını sağlar */
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  justify-content: center; /* justify-content ve align-items, modal açıldığında JavaScript tarafından ayarlanacak */
+  align-items: center;    /* Çünkü display: flex; olmadan bu özellikler bir işe yaramaz */
+  backdrop-filter: blur(5px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Modal İçeriği */
+.modal-content {
+  background-color: var(--card-background);
+  padding: 30px; /* Daha fazla padding */
+  border-radius: 15px; /* Daha yuvarlak köşeler */
+  width: 90%;
+  max-width: 450px; /* Biraz daha geniş olabilir */
+  position: relative;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25); /* Daha belirgin gölge */
+  animation: slideIn 0.3s ease-out; /* Modal açılış animasyonu */
+}
+
+.modal-content h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.8rem;
+  margin-top: 0;
+  margin-bottom: 25px; /* Boşluk artır */
+  text-align: center;
+  color: var(--primary-color);
+}
+
+.modal-content input {
+  width: calc(100% - 20px); /* Padding'i hesaba kat */
+  padding: 12px 10px; /* Daha fazla padding */
+  margin: 8px 0;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 1rem;
+  box-sizing: border-box; /* Padding ve border kutu boyutuna dahil */
+}
+
+.modal-content .card-row {
+  display: flex;
+  gap: 15px; /* Boşluğu artır */
+  margin-bottom: 15px;
+}
+.modal-content .card-row input {
+  flex: 1; /* Esnek boyutlandırma */
+}
+
+.modal-content button {
+  width: 100%;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-top: 20px; /* Daha fazla boşluk */
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 119, 204, 0.2);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.modal-content button:hover {
+  background-color: #005fa3;
+  transform: translateY(-2px);
+}
+
+.close {
+  position: absolute;
+  top: 15px; /* Biraz aşağı */
+  right: 20px; /* Biraz içeri */
+  font-size: 28px; /* Büyüt */
+  cursor: pointer;
+  color: #999;
+  transition: color 0.2s ease;
+}
+.close:hover {
+  color: #666;
+}
+
+/* Bildirim Mesajları */
+#notification {
+display: none; 
+padding: 15px; /* Daha fazla padding */
+margin-top: 25px; /* Daha fazla boşluk */
+border-radius: 10px; /* Daha yuvarlak köşeler */
+font-weight: bold;
+text-align: center;
+transition: opacity 0.4s ease-in-out; 
+opacity: 0;
+font-size: 1.05rem; /* Biraz büyüt */
+}
+
+#notification.success {
+background-color: #d4edda;
+color: #155724;
+border: 1px solid #c3e6cb;
+}
+
+#notification.error {
+background-color: #f8d7da;
+color: #721c24;
+border: 1px solid #f5c6cb;
+}
+
+#notification.visible {
+display: block; 
+opacity: 1;     
+}
+
+/* Modal İçi Bildirim Mesajları */
+#modal-notification {
+  /* Başlangıçta gizli ve JavaScript ile gösterilecek */
+  display: none; 
+  padding: 12px;
+  margin-bottom: 15px; /* Form ile arasında boşluk */
+  border-radius: 8px;
+  font-weight: bold;
+  text-align: center;
+  transition: opacity 0.3s ease-in-out; 
+  opacity: 0;
+  font-size: 0.95rem; /* Biraz daha küçük olabilir */
+}
+
+#modal-notification.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+#modal-notification.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+#modal-notification.visible {
+  display: block; 
+  opacity: 1;     
+}
+
+/* Animasyonlar */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+form label {
+  display: block; /* Etiketlerin kendi satırında olmasını sağlar */
+  text-align: left; /* Metni sola hizalar */
+  margin-bottom: 5px; /* Altına biraz boşluk verir */
+  color: var(--text-color-dark); /* Metin rengi */
+  font-weight: bold; /* Kalınlık */
+}
+
+/* Basit Spinner Stili */
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-top: 4px solid var(--primary-color);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Buton içindeki spinner için */
+#purchaseForm button.loading {
     display: flex;
-    gap: 10px;
-  }
-  
-  .modal-content button {
-    width: 100%;
-    background-color: #0077cc;
-    color: white;
-    padding: 10px;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    margin-top: 10px;
-    cursor: pointer;
-  }
-  
-  .modal-content button:hover {
-    background-color: #005fa3;
-  }
-  
-  .close {
-    position: absolute;
-    top: 10px; right: 15px;
-    font-size: 24px;
-    cursor: pointer;
-    color: #999;
-  }
-  
+    justify-content: center;
+    align-items: center;
+    pointer-events: none; /* Tıklamayı engelle */
+    opacity: 0.8;
+}
