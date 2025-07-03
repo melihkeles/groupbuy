@@ -22,6 +22,12 @@ app.post('/api/join', (req, res) => {
     const currentCount = row.count;
     console.log("Mevcut katılımcı sayısı:", currentCount);
 
+    const campaignDeadline = new Date("2025-07-05T23:59:59");
+    const now = new Date();
+    if (now > campaignDeadline) {
+      return res.status(400).json({ success: false, message: 'Kampanya süresi doldu.' });
+    }
+
     if (currentCount >= TARGET) {
       console.log("Kampanya dolmuş, kayıt alınmıyor.");
       return res.status(400).json({ success: false, message: 'Kampanya tamamlandı. Artık katılım yapılamaz.' });

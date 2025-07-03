@@ -106,3 +106,29 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchCurrentCount(); // Sayfa ilk yüklendiğinde çek
 });
 
+// Kampanya bitiş tarihi (örnek: 48 saat sonrası için)
+const campaignEndTime = new Date("2025-07-05T23:59:59"); // ← burayı istediğin tarihle güncelle
+
+function updateCountdown() {
+  const now = new Date();
+  const diff = campaignEndTime - now;
+
+  if (diff <= 0) {
+    document.getElementById("time-left").innerText = "Süre doldu!";
+    document.getElementById("buy-button").disabled = true;
+    document.getElementById("buy-button").innerText = "Kampanya Süresi Doldu";
+    return;
+  }
+
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+  document.getElementById("time-left").innerText =
+    `${hours} sa ${minutes} dk ${seconds} sn`;
+}
+
+// Her saniye güncelle
+setInterval(updateCountdown, 1000);
+updateCountdown(); // İlk yüklemede çalıştır
+

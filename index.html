@@ -107,6 +107,10 @@
     <span id="current-count">0</span> / 500 adet toplandı
   </div>
 
+  <div id="countdown-timer" style="font-size: 1.2em; margin-top: 10px; color: red;">
+    Kampanyanın bitmesine kalan süre: <span id="time-left"></span>
+  </div>  
+
   <!-- Geri sayım -->
   <div id="countdown">--:--:--</div>
 
@@ -169,7 +173,6 @@
         console.error('Katılımcı sayısı çekilemedi:', error);
       }
     }
-
 
     function startCountdown(hours = 48) {
       const endTime = new Date().getTime() + hours * 60 * 60 * 1000;
