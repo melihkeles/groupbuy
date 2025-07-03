@@ -24,6 +24,11 @@ async function fetchCurrentCount() {
   }
 }
 
+// Sayacı her 10 saniyede bir güncelle
+setInterval(() => {
+  fetchCurrentCount();
+}, 10000); // 10 saniye
+
 // Geriye doğru sayım başlat (48 saat varsayılan)
 function startCountdown(hours = 48) {
   const endTime = new Date().getTime() + hours * 60 * 60 * 1000;
@@ -96,3 +101,8 @@ window.onload = () => {
   fetchCurrentCount();
   startCountdown(48);
 };
+
+document.addEventListener('DOMContentLoaded', () => {
+  fetchCurrentCount(); // Sayfa ilk yüklendiğinde çek
+});
+
