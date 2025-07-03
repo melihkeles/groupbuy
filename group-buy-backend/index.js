@@ -54,11 +54,20 @@ app.post('/api/join', (req, res) => {
 app.get('/api/count', (req, res) => {
   db.get('SELECT COUNT(*) as count FROM orders', (err, row) => {
     if (err) {
-      return res.status(500).json({ success: false });
+      console.error("Katılımcı sayısı ve kampanya süresi çekilirken veritabanı hatası:", err);
+      return res.status(500).json({ success: false, message: 'Veritabanı hatası' });
     }
-    res.json({ success: true, count: row.count });
+    const currentCount = row.count;
+    const campaignDeadline = new Date("2025-07-05T23:59:59"); // Backend'deki kampanya bitiş tarihiniz
+
+    res.json({
+      success: true,
+      count: currentCount,
+      campaignDeadline: campaignDeadline.toISOString() // Frontend'e ISO string olarak gönderiyoruz
+    });
   });
 });
+
 
 app.get('/api/orders', (req, res) => {
   db.all('SELECT * FROM orders ORDER BY id DESC', (err, rows) => {

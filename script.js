@@ -1,5 +1,10 @@
+// group-buy-frontend/script.js
+
 const TARGET_COUNT = 500;
-let currentCount = 0;  // Backend'den gerçek sayı ile güncellenecek
+let currentCount = 0;
+let campaignEndTime; // Backend'den gelecek olan kampanya bitiş tarihi
+
+// --- Ortak Yardımcı Fonksiyonlar ---
 
 // Progress bar ve sayaç güncelleme fonksiyonu
 function updateProgressBar() {
@@ -8,39 +13,93 @@ function updateProgressBar() {
   document.getElementById("current-count").textContent = currentCount;
 }
 
-// Backend'den katılımcı sayısını çek
-async function fetchCurrentCount() {
+// Geri sayım mantığı
+function updateCountdown() {
+  // Eğer kampanya bitiş tarihi henüz tanımlanmadıysa (API'den gelmediyse) fonksiyonu çalıştırma
+  if (!campaignEndTime) return; 
+
+  const now = new Date();
+  const diff = campaignEndTime.getTime() - now.getTime(); // Kalan süreyi milisaniye cinsinden hesapla
+
+  const timeLeftSpan = document.getElementById("time-left");
+  const buyButton = document.getElementById("buy-button");
+
+  if (diff <= 0) { // Süre dolduysa
+    timeLeftSpan.innerText = "Süre doldu!";
+    if (buyButton) { // Satın alma butonunu devre dışı bırak
+      buyButton.disabled = true;
+      buyButton.innerText = "Kampanya Süresi Doldu";
+    }
+    // Geri sayım bittiğinde interval'ı durdur
+    if (window.countdownInterval) {
+        clearInterval(window.countdownInterval);
+    }
+    return;
+  }
+
+  // Kalan süreyi saat, dakika, saniye cinsinden hesapla
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+  // Geri sayımı HTML'e yaz
+  timeLeftSpan.innerText =
+    `${hours.toString().padStart(2,"0")} sa ${minutes.toString().padStart(2,"0")} dk ${seconds.toString().padStart(2,"0")} sn`;
+}
+
+
+// --- API İstekleri ve Veri Yönetimi ---
+
+// Backend'den katılımcı sayısını ve kampanya bitiş tarihini çeker
+async function fetchCurrentCountAndCampaignStatus() {
   try {
     const res = await fetch('http://localhost:3000/api/count');
     const data = await res.json();
     if (data.success) {
       currentCount = data.count;
-      updateProgressBar();
+      updateProgressBar(); // Progress barı güncelle
+
+      // Kampanya bitiş tarihini backend'den al ve Date objesine çevir
+      if (data.campaignDeadline) {
+          campaignEndTime = new Date(data.campaignDeadline);
+          updateCountdown(); // Tarihi aldıktan sonra geri sayımı hemen güncelle
+      }
+
+      // Eğer kampanya hedefi dolmuşsa veya süresi dolmuşsa butonları ayarla
+      if (currentCount >= TARGET_COUNT) {
+        const buyButton = document.getElementById("buy-button");
+        if (buyButton) {
+            buyButton.disabled = true;
+            buyButton.innerText = "Kampanya Tamamlandı";
+        }
+        document.getElementById("time-left").innerText = "Kampanya Tamamlandı"; // Sayaç yerine mesaj
+        if (window.countdownInterval) { // Sayaç interval'ını durdur
+            clearInterval(window.countdownInterval);
+        }
+      }
     } else {
-      console.warn('Katılımcı sayısı alınamadı.');
+      console.warn('Katılımcı sayısı veya kampanya süresi alınamadı:', data.message || 'Bilinmeyen hata');
     }
   } catch (error) {
-    console.error('Katılımcı sayısı çekilemedi:', error);
+    console.error('Veri çekilemedi:', error);
   }
 }
 
-// Sayacı her 10 saniyede bir güncelle
-setInterval(() => {
-  fetchCurrentCount();
-}, 10000); // 10 saniye
+// --- Olay Dinleyicileri ve Form İşlemleri ---
 
-
-// Modal açma/kapatma işlemleri
+// Satın al butonuna tıklayınca modal'ı aç
 document.getElementById("buy-button").addEventListener("click", () => {
-  document.getElementById("purchaseModal").style.display = "block";
+  document.getElementById("purchaseModal").style.display = "flex"; // flex olarak ayarlandı
 });
+
+// Modal kapatma butonuna tıklayınca modal'ı kapat
 document.getElementById("closeModal").addEventListener("click", () => {
   document.getElementById("purchaseModal").style.display = "none";
 });
 
-// Form gönderme işlemi, backend'e veri gönderilir
+// Satın alma formunu gönderince
 document.getElementById("purchaseForm").addEventListener("submit", async function(e) {
-  e.preventDefault();
+  e.preventDefault(); // Formun varsayılan submit davranışını engelle
 
   const form = e.target;
   const data = {
@@ -60,87 +119,33 @@ document.getElementById("purchaseForm").addEventListener("submit", async functio
 
     const result = await res.json();
     if (result.success) {
-      currentCount++;          // Backend'e başarılı kayıt sonrası sayıyı arttır
-      updateProgressBar();
+      // Başarılı kayıt sonrası güncel bilgileri backend'den tekrar çek
+      await fetchCurrentCountAndCampaignStatus(); 
       alert("Kampanyaya başarıyla katıldınız!");
       document.getElementById("purchaseModal").style.display = "none";
-      form.reset();
+      form.reset(); // Formu sıfırla
     } else {
-      alert("Bir hata oluştu. Lütfen tekrar deneyin.");
+      alert(result.message || "Bir hata oluştu. Lütfen tekrar deneyin.");
     }
   } catch (err) {
-    console.error(err);
+    console.error("Sunucuya ulaşılamadı veya istekte hata oluştu:", err);
     alert("Sunucuya ulaşılamadı. Lütfen sunucu durumunu kontrol edin.");
   }
 });
 
-// Sayfa yüklendiğinde backend'den güncel sayıyı çek ve geri sayımı başlat
-window.onload = () => {
-  fetchCurrentCount()
-};
 
+// --- Sayfa Yükleme ve Başlangıç Ayarları ---
+
+// Sayfa ilk yüklendiğinde çalışacak kodlar
 document.addEventListener('DOMContentLoaded', () => {
-  fetchCurrentCount(); // Sayfa ilk yüklendiğinde çek
+  // Hem katılımcı sayısını hem de kampanya durumunu ilk yüklemede çek
+  fetchCurrentCountAndCampaignStatus(); 
+  
+  // Geri sayımı her saniye güncellemek için interval başlat
+  // Bu interval'ı global scope'a atıyoruz ki gerektiğinde durdurabilelim
+  window.countdownInterval = setInterval(updateCountdown, 1000); 
+
+  // Katılımcı sayısını ve kampanya bitiş tarihini periyodik olarak güncelle (10 saniyede bir)
+  // Bu, yeni kayıtların veya kampanya tarihinin güncellenmesi durumunda frontend'i senkron tutar.
+  setInterval(fetchCurrentCountAndCampaignStatus, 10000); 
 });
-
-// Kampanya bitiş tarihi (örnek: 48 saat sonrası için)
-const campaignEndTime = new Date("2025-07-05T23:59:59"); // ← burayı istediğin tarihle güncelle
-
-function updateCountdown() {
-  const now = new Date();
-  const diff = campaignEndTime - now;
-
-  if (diff <= 0) {
-    document.getElementById("time-left").innerText = "Süre doldu!";
-    document.getElementById("buy-button").disabled = true;
-    document.getElementById("buy-button").innerText = "Kampanya Süresi Doldu";
-    return;
-  }
-
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-  document.getElementById("time-left").innerText =
-    `${hours} sa ${minutes} dk ${seconds} sn`;
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  // Tüm silme butonlarını seç
-  const deleteButtons = document.querySelectorAll('.delete-btn');
-
-  deleteButtons.forEach(button => {
-      button.addEventListener('click', async (event) => {
-          const orderId = event.target.dataset.orderId; // Butonun data-order-id özelliğinden ID'yi al
-
-          if (!confirm(`Sipariş ID: ${orderId} gerçekten silmek istiyor musunuz?`)) {
-              return; // Kullanıcı onaylamazsa işlemi iptal et
-          }
-
-          try {
-              const response = await fetch(`/api/orders/${orderId}`, {
-                  method: 'DELETE' // DELETE metodunu kullan
-              });
-
-              const data = await response.json();
-
-              if (data.success) {
-                  alert(data.message);
-                  // Sipariş başarıyla silindiyse, sayfadan ilgili satırı/elementi kaldır
-                  event.target.closest('tr').remove(); // Tablo satırı ise 'tr'yi kaldır
-                  // Veya sayfayı yeniden yükle: window.location.reload();
-              } else {
-                  alert(`Silme başarısız: ${data.message}`);
-              }
-          } catch (error) {
-              console.error("Silme isteği gönderilirken hata oluştu:", error);
-              alert("Sipariş silinirken bir hata oluştu.");
-          }
-      });
-  });
-});
-
-// Her saniye güncelle
-setInterval(updateCountdown, 1000);
-updateCountdown(); // İlk yüklemede çalıştır
-
