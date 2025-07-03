@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Toplu Alım Kampanyası</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+    h1 { text-align: center; }
+    #product-img {
+      display: block;
+      margin: 20px auto;
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+    #progress-container {
+      width: 100%;
+      background-color: #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 20px;
+      height: 30px;
+    }
+    #progress {
+      height: 100%;
+      background-color: #4caf50;
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+    #count-info {
+      margin-top: 10px;
+      font-weight: bold;
+      text-align: center;
+    }
+    #countdown {
+      font-size: 1.5em;
+      text-align: center;
+      margin-top: 20px;
+    }
+    #campaign-info {
+      margin-top: 20px;
+      font-style: italic;
+      color: #555;
+      text-align: center;
+    }
+    button {
+      display: block;
+      margin: 30px auto;
+      padding: 12px 24px;
+      font-size: 1.2em;
+      cursor: pointer;
+      border: none;
+      background-color: #2196F3;
+      color: white;
+      border-radius: 6px;
+    }
+    /* Modal */
+    #purchaseModal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0; width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      justify-content: center; align-items: center;
+    }
+    #modalContent {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 400px;
+      position: relative;
+    }
+    #closeModal {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+      color: #888;
+    }
+    form input {
+      width: 100%;
+      margin: 10px 0;
+      padding: 8px;
+      font-size: 1em;
+      box-sizing: border-box;
+    }
+    form label {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Çamaşır Makinesi Toplu Alım Kampanyası</h1>
+
+  <!-- Ürün fotoğrafı -->
+  <img id="product-img" src="https://statics.vestel.com.tr/productimages/20265388_r1_1000_1000.jpg" alt="Çamaşır Makinesi" />
+
+  <!-- Sayaç ve progress bar -->
+  <div id="progress-container">
+    <div id="progress"></div>
+  </div>
+  <div id="count-info">
+    <span id="current-count">0</span> / 500 adet toplandı
+  </div>
+
+  <!-- Geri sayım -->
+  <div id="countdown">--:--:--</div>
+
+  <!-- Katıl butonu -->
+  <button id="buy-button">Satın Al / Katıl</button>
+
+  <!-- Kampanya açıklaması -->
+  <div id="campaign-info">
+    Katılım sayısı hedefe ulaşmazsa, tüm katılımcılara para iadesi yapılacaktır.
+  </div>
+
+  <!-- Modal satın alma formu -->
+  <div id="purchaseModal">
+    <div id="modalContent">
+      <span id="closeModal">&times;</span>
+      <h2>Satın Alma Formu</h2>
+      <form id="purchaseForm">
+        <label>Ad Soyad</label>
+        <input type="text" required placeholder="Adınızı ve Soyadınızı girin" />
+        <label>E-posta</label>
+        <input type="email" required placeholder="E-posta adresinizi girin" />
+        <label>Kart Numarası</label>
+        <input type="text" required placeholder="Kart numaranızı girin" maxlength="19" />
+        <label>Son Kullanma Tarihi (AA/YY)</label>
+        <input type="text" required placeholder="12/25" maxlength="5" />
+        <label>CVC</label>
+        <input type="text" required placeholder="CVC" maxlength="4" />
+        <button type="submit">Katıl ve Öde</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const TARGET_COUNT = 500;
+    let currentCount = 0;
+
+    function updateProgressBar() {
+      const percent = (currentCount / TARGET_COUNT) * 100;
+      document.getElementById("progress").style.width = percent + "%";
+      document.getElementById("current-count").textContent = currentCount;
+    }
+
+    async function fetchCurrentCount() {
+      try {
+        const res = await fetch('http://localhost:3000/api/count');
+        const data = await res.json();
+        if (data.success) {
+          currentCount = data.count;
+          updateProgressBar();
+
+          // Eğer kampanya dolmuşsa
+          if (currentCount >= TARGET_COUNT) {
+            document.getElementById("buy-button").disabled = true;
+            document.getElementById("buy-button").innerText = "Kampanya Tamamlandı";
+          }
+        } else {
+          console.warn('Katılımcı sayısı alınamadı.');
+        }
+      } catch (error) {
+        console.error('Katılımcı sayısı çekilemedi:', error);
+      }
+    }
+
+
+    function startCountdown(hours = 48) {
+      const endTime = new Date().getTime() + hours * 60 * 60 * 1000;
+
+      const timer = setInterval(() => {
+        const now = new Date().getTime();
+        const diff = endTime - now;
+
+        if (diff < 0) {
+          clearInterval(timer);
+          document.getElementById("countdown").innerText = "Süre doldu";
+          return;
+        }
+
+        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+        document.getElementById("countdown").innerText =
+          `${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`;
+      }, 1000);
+    }
+
+    document.getElementById("buy-button").addEventListener("click", () => {
+      document.getElementById("purchaseModal").style.display = "flex";
+    });
+
+    document.getElementById("closeModal").addEventListener("click", () => {
+      document.getElementById("purchaseModal").style.display = "none";
+    });
+
+    document.getElementById("purchaseForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const form = e.target;
+      const data = {
+        name: form[0].value.trim(),
+        email: form[1].value.trim(),
+        card: form[2].value.trim(),
+        exp: form[3].value.trim(),
+        cvc: form[4].value.trim()
+      };
+
+      try {
+        const res = await fetch("http://localhost:3000/api/join", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+        if (result.success) {
+          currentCount++;
+          updateProgressBar();
+          alert("Kampanyaya başarıyla katıldınız!");
+          document.getElementById("purchaseModal").style.display = "none";
+          form.reset();
+        } else {
+          alert(result.message || "Bir hata oluştu. Lütfen tekrar deneyin.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Sunucuya ulaşılamadı. Lütfen sunucu durumunu kontrol edin.");
+      }
+    });
+
+    window.onload = () => {
+      fetchCurrentCount();
+      startCountdown(48);
+    };
+  </script>
+</body>
+</html>
