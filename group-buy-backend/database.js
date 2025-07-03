@@ -1,22 +1,22 @@
-// database.js
+// group-buy-backend/database.js
 const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+const db = new sqlite3.Database('./orders.db', (err) => {
+  if (err) {
+    console.error(err.message);
+  }
+  console.log('Veritabanına bağlandı.');
+});
 
-// Veritabanı dosyasını backend klasörünün içindeki data.db olarak tanımlar
-const dbPath = path.join(__dirname, 'data.db');
-const db = new sqlite3.Database(dbPath);
-
-// Sipariş tablosu varsa oluşturma
-db.run(`
-  CREATE TABLE IF NOT EXISTS orders (
+db.serialize(() => {
+  db.run(`CREATE TABLE IF NOT EXISTS orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
-    email TEXT,
-    card TEXT,
-    exp TEXT,
-    cvc TEXT
-  )
-`);
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    card TEXT NOT NULL,
+    exp TEXT NOT NULL,
+    cvc TEXT NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  )`);
+});
 
 module.exports = db;
-
