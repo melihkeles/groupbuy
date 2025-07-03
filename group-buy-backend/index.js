@@ -11,24 +11,24 @@ const TARGET = 500;
 app.use(cors());
 app.use(bodyParser.json());
 
-// Katılım ekleme endpoint'i
+// Yeni katılım ekleme
 app.post('/api/join', (req, res) => {
   db.get('SELECT COUNT(*) as count FROM orders', (err, row) => {
     if (err) {
-      console.log("Veritabanı sayım hatası:", err);
+      console.log("Veritabanı sorgu hatası:", err);
       return res.status(500).json({ success: false, message: 'Veritabanı hatası' });
     }
 
     const currentCount = row.count;
-    console.log("Mevcut kayıt sayısı:", currentCount);
+    console.log("Mevcut katılımcı sayısı:", currentCount);
 
     if (currentCount >= TARGET) {
-      console.log("Kampanya dolmuş, kayıt reddedildi.");
+      console.log("Kampanya dolmuş, kayıt alınmıyor.");
       return res.status(400).json({ success: false, message: 'Kampanya tamamlandı. Artık katılım yapılamaz.' });
     }
 
     const { name, email, card, exp, cvc } = req.body;
-    console.log("Yeni kayıt geliyor:", name, email);
+    console.log("Yeni kayıt:", name, email);
 
     const stmt = db.prepare('INSERT INTO orders (name, email, card, exp, cvc) VALUES (?, ?, ?, ?, ?)');
     stmt.run(name, email, card, exp, cvc, function (err) {
@@ -48,10 +48,9 @@ app.post('/api/join', (req, res) => {
 app.get('/api/count', (req, res) => {
   db.get('SELECT COUNT(*) as count FROM orders', (err, row) => {
     if (err) {
-      res.status(500).json({ success: false });
-    } else {
-      res.json({ success: true, count: row.count });
+      return res.status(500).json({ success: false });
     }
+    res.json({ success: true, count: row.count });
   });
 });
 

@@ -1,18 +1,22 @@
 // database.js
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database(__dirname + '/data.db');
+const path = require('path');
 
-// Kampanya katılımlarını tutacak tablo
-db.serialize(() => {
-  db.run(`CREATE TABLE IF NOT EXISTS orders (
+// Veritabanı dosyasını backend klasörünün içindeki data.db olarak tanımlar
+const dbPath = path.join(__dirname, 'data.db');
+const db = new sqlite3.Database(dbPath);
+
+// Sipariş tablosu varsa oluşturma
+db.run(`
+  CREATE TABLE IF NOT EXISTS orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT,
     email TEXT,
     card TEXT,
     exp TEXT,
-    cvc TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )`);
-});
+    cvc TEXT
+  )
+`);
 
 module.exports = db;
+
