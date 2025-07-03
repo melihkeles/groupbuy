@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Toplu Alım Kampanyası</title>
   <style>
+    /* ... CSS kodlarınız aynı kalacak ... */
     body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; }
     h1 { text-align: center; }
     #product-img {
@@ -96,10 +97,8 @@
 <body>
   <h1>Çamaşır Makinesi Toplu Alım Kampanyası</h1>
 
-  <!-- Ürün fotoğrafı -->
   <img id="product-img" src="https://statics.vestel.com.tr/productimages/20265388_r1_1000_1000.jpg" alt="Çamaşır Makinesi" />
 
-  <!-- Sayaç ve progress bar -->
   <div id="progress-container">
     <div id="progress"></div>
   </div>
@@ -111,15 +110,12 @@
     Kampanyanın bitmesine kalan süre: <span id="time-left"></span>
   </div>  
 
-  <!-- Katıl butonu -->
   <button id="buy-button">Satın Al / Katıl</button>
 
-  <!-- Kampanya açıklaması -->
   <div id="campaign-info">
     Katılım sayısı hedefe ulaşmazsa, tüm katılımcılara para iadesi yapılacaktır.
   </div>
-  <script src="script.js"></script> 
-  <!-- Modal satın alma formu -->
+  
   <div id="purchaseModal">
     <div id="modalContent">
       <span id="closeModal">&times;</span>
@@ -140,5 +136,6 @@
     </div>
   </div>
 
+  <script src="script.js"></script> 
 </body>
 </html>
