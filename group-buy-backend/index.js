@@ -60,6 +60,41 @@ app.get('/api/count', (req, res) => {
   });
 });
 
+app.get('/api/orders', (req, res) => {
+  db.all('SELECT * FROM orders ORDER BY id DESC', (err, rows) => {
+    if (err) {
+      return res.status(500).json({ success: false, message: 'Veritabanı hatası' });
+    }
+    res.json({ success: true, orders: rows });
+  });
+});
+
+app.delete('/api/orders/:id', async (req, res) => {
+  const orderId = req.params.id; // URL'den ID'yi al
+  console.log(`Silme isteği alındı, Sipariş ID: ${orderId}`);
+
+  try {
+      // Veritabanından siparişi ID'ye göre bul ve sil
+      // Varsayımsal olarak, eğer MongoDB kullanıyorsanız:
+      const deleteResult = await collection.deleteOne({ _id: new ObjectId(orderId) });
+
+      // Eğer PostgreSQL/MySQL gibi bir SQL veritabanı kullanıyorsanız:
+      // const deleteResult = await pool.query('DELETE FROM orders WHERE id = $1', [orderId]);
+      // const deletedRows = deleteResult.rowCount;
+
+      if (deleteResult.deletedCount === 1) { // MongoDB için
+      // if (deletedRows === 1) { // SQL için
+          res.json({ success: true, message: `Sipariş ID: ${orderId} başarıyla silindi.` });
+      } else {
+          res.status(404).json({ success: false, message: `Sipariş ID: ${orderId} bulunamadı veya silinemedi.` });
+      }
+  } catch (error) {
+      console.error("Sipariş silinirken hata oluştu:", error);
+      res.status(500).json({ success: false, message: "Sipariş silinirken sunucu hatası oluştu.", error: error.message });
+  }
+});
+
+
 // Sunucuyu başlat
 app.listen(PORT, () => {
   console.log(`Sunucu çalışıyor: http://localhost:${PORT}`);

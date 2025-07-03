@@ -29,28 +29,6 @@ setInterval(() => {
   fetchCurrentCount();
 }, 10000); // 10 saniye
 
-// Geriye doğru sayım başlat (48 saat varsayılan)
-function startCountdown(hours = 48) {
-  const endTime = new Date().getTime() + hours * 60 * 60 * 1000;
-
-  const timer = setInterval(() => {
-    const now = new Date().getTime();
-    const diff = endTime - now;
-
-    if (diff < 0) {
-      clearInterval(timer);
-      document.getElementById("countdown").innerText = "Süre doldu";
-      return;
-    }
-
-    const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const s = Math.floor((diff % (1000 * 60)) / 1000);
-
-    document.getElementById("countdown").innerText =
-      `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-  }, 1000);
-}
 
 // Modal açma/kapatma işlemleri
 document.getElementById("buy-button").addEventListener("click", () => {
@@ -98,8 +76,7 @@ document.getElementById("purchaseForm").addEventListener("submit", async functio
 
 // Sayfa yüklendiğinde backend'den güncel sayıyı çek ve geri sayımı başlat
 window.onload = () => {
-  fetchCurrentCount();
-  startCountdown(48);
+  fetchCurrentCount()
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -127,6 +104,41 @@ function updateCountdown() {
   document.getElementById("time-left").innerText =
     `${hours} sa ${minutes} dk ${seconds} sn`;
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Tüm silme butonlarını seç
+  const deleteButtons = document.querySelectorAll('.delete-btn');
+
+  deleteButtons.forEach(button => {
+      button.addEventListener('click', async (event) => {
+          const orderId = event.target.dataset.orderId; // Butonun data-order-id özelliğinden ID'yi al
+
+          if (!confirm(`Sipariş ID: ${orderId} gerçekten silmek istiyor musunuz?`)) {
+              return; // Kullanıcı onaylamazsa işlemi iptal et
+          }
+
+          try {
+              const response = await fetch(`/api/orders/${orderId}`, {
+                  method: 'DELETE' // DELETE metodunu kullan
+              });
+
+              const data = await response.json();
+
+              if (data.success) {
+                  alert(data.message);
+                  // Sipariş başarıyla silindiyse, sayfadan ilgili satırı/elementi kaldır
+                  event.target.closest('tr').remove(); // Tablo satırı ise 'tr'yi kaldır
+                  // Veya sayfayı yeniden yükle: window.location.reload();
+              } else {
+                  alert(`Silme başarısız: ${data.message}`);
+              }
+          } catch (error) {
+              console.error("Silme isteği gönderilirken hata oluştu:", error);
+              alert("Sipariş silinirken bir hata oluştu.");
+          }
+      });
+  });
+});
 
 // Her saniye güncelle
 setInterval(updateCountdown, 1000);

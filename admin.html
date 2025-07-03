@@ -32,6 +32,10 @@
     </tbody>
   </table>
 
+  <td>
+    <button class="delete-btn" data-order-id="{{order._id}}">Sil</button>
+  </td>
+
   <script>
     async function loadOrders() {
       const tbody = document.getElementById('orders-body');
