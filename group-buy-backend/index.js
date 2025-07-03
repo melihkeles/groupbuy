@@ -73,24 +73,33 @@ app.delete('/api/orders/:id', async (req, res) => {
   const orderId = req.params.id; // URL'den ID'yi al
   console.log(`Silme isteği alındı, Sipariş ID: ${orderId}`);
 
+  // ID'nin bir sayı olduğundan emin olun (SQLite ID'leri genelde sayıdır)
+  // Eğer ID'ler string UUID ise, isNaN kontrolü yerine başka bir doğrulama yapmanız gerekir.
+  if (isNaN(orderId)) {
+    console.error("Geçersiz sipariş ID formatı:", orderId);
+    return res.status(400).json({ success: false, message: "Geçersiz sipariş ID formatı. ID bir sayı olmalıdır." });
+  }
+
   try {
-      // Veritabanından siparişi ID'ye göre bul ve sil
-      // Varsayımsal olarak, eğer MongoDB kullanıyorsanız:
-      const deleteResult = await collection.deleteOne({ _id: new ObjectId(orderId) });
-
-      // Eğer PostgreSQL/MySQL gibi bir SQL veritabanı kullanıyorsanız:
-      // const deleteResult = await pool.query('DELETE FROM orders WHERE id = $1', [orderId]);
-      // const deletedRows = deleteResult.rowCount;
-
-      if (deleteResult.deletedCount === 1) { // MongoDB için
-      // if (deletedRows === 1) { // SQL için
-          res.json({ success: true, message: `Sipariş ID: ${orderId} başarıyla silindi.` });
-      } else {
-          res.status(404).json({ success: false, message: `Sipariş ID: ${orderId} bulunamadı veya silinemedi.` });
+    // SQLite için DELETE sorgusu
+    db.run('DELETE FROM orders WHERE id = ?', orderId, function(err) {
+      if (err) {
+        console.error("Backend: Sipariş silinirken veritabanı hatası oluştu:", err);
+        return res.status(500).json({ success: false, message: "Sipariş silinirken sunucu hatası oluştu.", error: err.message });
       }
+
+      if (this.changes > 0) { // SQLite'da etkilenen satır sayısı `this.changes` ile alınır
+        res.json({ success: true, message: `Sipariş ID: ${orderId} başarıyla silindi.` });
+      } else {
+        res.status(404).json({ success: false, message: `Sipariş ID: ${orderId} bulunamadı veya silinemedi.` });
+      }
+    });
+
   } catch (error) {
-      console.error("Sipariş silinirken hata oluştu:", error);
-      res.status(500).json({ success: false, message: "Sipariş silinirken sunucu hatası oluştu.", error: error.message });
+    // Bu catch bloğu async/await hatalarını yakalar, ancak db.run callback'i senkron olmadığı için
+    // hatalar genellikle callback içinde yakalanır. Yine de tutmakta fayda var.
+    console.error("Backend: Sipariş silinirken beklenmedik hata oluştu:", error);
+    res.status(500).json({ success: false, message: "Sipariş silinirken sunucu hatası oluştu.", error: error.message });
   }
 });
 

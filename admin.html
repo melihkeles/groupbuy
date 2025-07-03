@@ -11,6 +11,8 @@
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
     th { background-color: #4CAF50; color: white; }
     tr:nth-child(even) { background-color: #f9f9f9; }
+    .delete-btn { background-color: #f44336; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
+    .delete-btn:hover { background-color: #da190b; }
   </style>
 </head>
 <body>
@@ -25,16 +27,11 @@
         <th>Son Kullanma</th>
         <th>CVC</th>
         <th>Tarih</th>
-      </tr>
+        <th>İşlem</th> </tr>
     </thead>
     <tbody id="orders-body">
-      <tr><td colspan="7">Yükleniyor...</td></tr>
-    </tbody>
+      <tr><td colspan="8">Yükleniyor...</td></tr> </tbody>
   </table>
-
-  <td>
-    <button class="delete-btn" data-order-id="{{order._id}}">Sil</button>
-  </td>
 
   <script>
     async function loadOrders() {
@@ -44,12 +41,12 @@
         const data = await res.json();
 
         if (!data.success) {
-          tbody.innerHTML = '<tr><td colspan="7">Veri alınamadı</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8">Veri alınamadı</td></tr>';
           return;
         }
 
         if (data.orders.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7">Sipariş bulunamadı</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8">Sipariş bulunamadı</td></tr>';
           return;
         }
 
@@ -57,19 +54,70 @@
         data.orders.forEach(order => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td>${order.id}</td>
-            <td>${order.name}</td>
+            <td>${order.id}</td> <td>${order.name}</td>
             <td>${order.email}</td>
             <td>${order.card}</td>
             <td>${order.exp}</td>
             <td>${order.cvc}</td>
             <td>${order.created_at}</td>
-          `;
+            <td><button class="delete-btn" data-order-id="${order.id}">Sil</button></td> `;
           tbody.appendChild(tr);
         });
+
+        // Tüm silme butonlarını seç ve olay dinleyicisini ekle
+        attachDeleteEventListeners();
+
       } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="7">Sunucuya ulaşılamadı</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8">Sunucuya ulaşılamadı</td></tr>';
+        console.error("Siparişler yüklenirken hata:", e); // Hata ayıklama için
       }
+    }
+
+    async function deleteOrder(orderId) {
+        if (!confirm(`Sipariş ID: ${orderId} gerçekten silmek istiyor musunuz?`)) {
+            return; // Kullanıcı onaylamazsa işlemi iptal et
+        }
+
+        try {
+            const response = await fetch(`http://localhost:3000/api/orders/${orderId}`, {
+                method: 'DELETE'
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                alert(data.message);
+                // Sipariş başarıyla silindiyse, listeyi yeniden yükle
+                loadOrders(); // Listeyi yenilemek en basit yol
+                // Alternatif olarak, silinen satırı DOM'dan kaldırabilirsiniz
+                // const rowToRemove = document.querySelector(`button[data-order-id="${orderId}"]`).closest('tr');
+                // if (rowToRemove) rowToRemove.remove();
+            } else {
+                alert(`Silme başarısız: ${data.message}`);
+            }
+        } catch (error) {
+            console.error("Silme isteği gönderilirken hata oluştu:", error);
+            alert("Sipariş silinirken bir hata oluştu.");
+        }
+    }
+
+    function attachDeleteEventListeners() {
+        // Not: loadOrders her çalıştığında bu fonksiyon da çalışır ve butonları yeniden seçer.
+        // Eğer her yüklemede tamamen yeni butonlar oluşturuluyorsa bu sorun olmaz.
+        // Aksi takdirde, var olan dinleyicilerin çift tetiklenmemesi için dikkatli olmak gerekir (örneğin event delegation kullanmak).
+        const deleteButtons = document.querySelectorAll('.delete-btn');
+        deleteButtons.forEach(button => {
+            // Var olan dinleyicileri kaldırmak (double click sorununu önlemek için)
+            // Bu kısım, butona birden fazla dinleyici eklenmesini önler.
+            button.removeEventListener('click', handleButtonClick); // Önceki dinleyiciyi kaldır
+            button.addEventListener('click', handleButtonClick); // Yeni dinleyiciyi ekle
+        });
+    }
+
+    // Olay dinleyici fonksiyonu
+    function handleButtonClick(event) {
+        const orderId = event.target.dataset.orderId;
+        deleteOrder(orderId);
     }
 
     window.onload = loadOrders;
