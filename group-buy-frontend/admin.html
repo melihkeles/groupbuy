@@ -17,6 +17,7 @@
 </head>
 <body>
   <h1>Admin Panel - Toplu Alım Siparişleri</h1>
+  <button id="back-to-home" style="margin: 10px; padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Ana Sayfaya Dön</button>
   <table>
     <thead>
       <tr>
@@ -34,11 +35,39 @@
   </table>
 
   <script>
+    const BASE_URL = 'http://localhost:5001/api'; // BASE_URL tanımını ekleyin
+    
+    function getUserToken() { // Token alma fonksiyonunu ekleyin
+        return localStorage.getItem('userToken');
+    }
+
     async function loadOrders() {
       const tbody = document.getElementById('orders-body');
+      const token = getUserToken(); // Token'ı al
+
+      if (!token) {
+          tbody.innerHTML = '<tr><td colspan="8">Yönetici paneline erişmek için giriş yapmalısınız.</td></tr>';
+          console.error("Token yok, admin paneline erişim engellendi.");
+          // Kullanıcıyı login sayfasına yönlendirebilirsiniz
+          setTimeout(() => { window.location.href = 'login.html'; }, 2000);
+          return;
+      }
+
       try {
-        const res = await fetch('http://localhost:3000/api/orders');
+        const res = await fetch(`${BASE_URL}/orders`, { // BASE_URL kullanıldı
+            headers: {
+                'Authorization': `Bearer ${token}` // TOKEN BURAYA EKLENDİ!
+            }
+        });
         const data = await res.json();
+
+        // Eğer backend'den 401/403 gibi bir hata dönerse
+        if (!res.ok && (response.status === 401 || response.status === 403)) {
+            tbody.innerHTML = '<tr><td colspan="8">Yetkisiz erişim. Lütfen tekrar giriş yapın.</td></tr>';
+            removeUserToken(); // Geçersiz token'ı sil
+            setTimeout(() => { window.location.href = 'login.html'; }, 2000);
+            return;
+        }
 
         if (!data.success) {
           tbody.innerHTML = '<tr><td colspan="8">Veri alınamadı</td></tr>';
@@ -64,35 +93,45 @@
           tbody.appendChild(tr);
         });
 
-        // Tüm silme butonlarını seç ve olay dinleyicisini ekle
         attachDeleteEventListeners();
 
       } catch (e) {
         tbody.innerHTML = '<tr><td colspan="8">Sunucuya ulaşılamadı</td></tr>';
-        console.error("Siparişler yüklenirken hata:", e); // Hata ayıklama için
+        console.error("Siparişler yüklenirken hata:", e);
       }
     }
 
     async function deleteOrder(orderId) {
         if (!confirm(`Sipariş ID: ${orderId} gerçekten silmek istiyor musunuz?`)) {
-            return; // Kullanıcı onaylamazsa işlemi iptal et
+            return;
+        }
+
+        const token = getUserToken(); // Token'ı al
+        if (!token) {
+            alert("Giriş yapmadığınız için silme işlemi yapılamadı.");
+            setTimeout(() => { window.location.href = 'login.html'; }, 1500);
+            return;
         }
 
         try {
-            const response = await fetch(`http://localhost:3000/api/orders/${orderId}`, {
-                method: 'DELETE'
+            const response = await fetch(`${BASE_URL}/orders/${orderId}`, { // BASE_URL kullanıldı
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}` // TOKEN BURAYA EKLENDİ!
+                }
             });
 
             const data = await response.json();
 
-            if (data.success) {
+            if (response.ok) { // HTTP status 200-299
                 alert(data.message);
-                // Sipariş başarıyla silindiyse, listeyi yeniden yükle
-                loadOrders(); // Listeyi yenilemek en basit yol
-                // Alternatif olarak, silinen satırı DOM'dan kaldırabilirsiniz
-                // const rowToRemove = document.querySelector(`button[data-order-id="${orderId}"]`).closest('tr');
-                // if (rowToRemove) rowToRemove.remove();
-            } else {
+                loadOrders();
+            } else if (response.status === 401 || response.status === 403) {
+                alert("Yetkisiz işlem. Lütfen tekrar giriş yapın.");
+                removeUserToken();
+                setTimeout(() => { window.location.href = 'login.html'; }, 1500);
+            }
+            else {
                 alert(`Silme başarısız: ${data.message}`);
             }
         } catch (error) {
@@ -102,24 +141,24 @@
     }
 
     function attachDeleteEventListeners() {
-        // Not: loadOrders her çalıştığında bu fonksiyon da çalışır ve butonları yeniden seçer.
-        // Eğer her yüklemede tamamen yeni butonlar oluşturuluyorsa bu sorun olmaz.
-        // Aksi takdirde, var olan dinleyicilerin çift tetiklenmemesi için dikkatli olmak gerekir (örneğin event delegation kullanmak).
         const deleteButtons = document.querySelectorAll('.delete-btn');
         deleteButtons.forEach(button => {
-            // Var olan dinleyicileri kaldırmak (double click sorununu önlemek için)
-            // Bu kısım, butona birden fazla dinleyici eklenmesini önler.
-            button.removeEventListener('click', handleButtonClick); // Önceki dinleyiciyi kaldır
-            button.addEventListener('click', handleButtonClick); // Yeni dinleyiciyi ekle
+            button.removeEventListener('click', handleButtonClick);
+            button.addEventListener('click', handleButtonClick);
         });
     }
 
-    // Olay dinleyici fonksiyonu
     function handleButtonClick(event) {
         const orderId = event.target.dataset.orderId;
         deleteOrder(orderId);
     }
 
+    // Ana sayfaya dön butonu
+    document.getElementById('back-to-home').addEventListener('click', () => {
+        window.location.href = 'index.html';
+    });
+
+    // Sayfa yüklendiğinde siparişleri yükle
     window.onload = loadOrders;
   </script>
 </body>

@@ -319,3 +319,13 @@ form label {
     pointer-events: none; /* Tıklamayı engelle */
     opacity: 0.8;
 }
+.top-nav {
+  text-align: right;
+  padding: 15px;
+  background-color: var(--card-background);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.top-nav button:hover {
+  opacity: 0.9;
+}

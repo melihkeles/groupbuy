@@ -1,48 +1,97 @@
 // group-buy-frontend/script.js
+const BASE_URL = 'http://localhost:5001/api';
 
 const TARGET_COUNT = 500;
 let currentCount = 0;
-let campaignEndTime; // Backend'den gelecek olan kampanya bitiş tarihi
+let campaignEndTime;
+
+// --- Kullanıcı Bilgisi ve Token Yönetimi ---
+function getUserToken() {
+    return localStorage.getItem('userToken');
+}
+
+function removeUserToken() {
+    localStorage.removeItem('userToken');
+}
+
+// Token'dan kullanıcı adını/e-postasını çözmek için (sadece görüntüleme amaçlı)
+function decodeToken(token) {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        console.error("Token çözme hatası:", e);
+        return null;
+    }
+}
+
+// Navigasyon butonlarını ve karşılama mesajını güncelleme
+function updateNavigation() {
+    const token = getUserToken();
+    const loginButton = document.getElementById('login-button');
+    const registerButton = document.getElementById('register-button');
+    const logoutButton = document.getElementById('logout-button');
+    const welcomeMessage = document.getElementById('welcome-message');
+
+    if (token) {
+        // Kullanıcı giriş yapmış
+        const decoded = decodeToken(token);
+        if (decoded && decoded.userEmail) { // Veya decoded.userName, eğer token'a ekliyorsanız
+            welcomeMessage.textContent = `Hoş geldiniz, ${decoded.userEmail}!`;
+        } else {
+            welcomeMessage.textContent = `Hoş geldiniz!`;
+        }
+        loginButton.style.display = 'none';
+        registerButton.style.display = 'none';
+        logoutButton.style.display = 'inline-block';
+    } else {
+        // Kullanıcı giriş yapmamış
+        welcomeMessage.textContent = '';
+        loginButton.style.display = 'inline-block';
+        registerButton.style.display = 'inline-block';
+        logoutButton.style.display = 'none';
+    }
+}
 
 // --- Ortak Yardımcı Fonksiyonlar ---
 
-// Progress bar ve sayaç güncelleme fonksiyonu
+// Progress bar ve sayaç güncelleme fonksiyonu (Aynı kaldı)
 function updateProgressBar() {
   const percent = (currentCount / TARGET_COUNT) * 100;
   document.getElementById("progress").style.width = `${percent}%`;
   document.getElementById("current-count").textContent = currentCount;
 }
 
-// Geri sayım mantığı
+// Geri sayım mantığı (Aynı kaldı)
 function updateCountdown() {
-  // Eğer kampanya bitiş tarihi henüz tanımlanmadıysa (API'den gelmediyse) fonksiyonu çalıştırma
   if (!campaignEndTime) return;
 
   const now = new Date();
-  const diff = campaignEndTime.getTime() - now.getTime(); // Kalan süreyi milisaniye cinsinden hesapla
+  const diff = campaignEndTime.getTime() - now.getTime();
 
   const timeLeftSpan = document.getElementById("time-left");
   const buyButton = document.getElementById("buy-button");
 
-  if (diff <= 0) { // Süre dolduysa
+  if (diff <= 0) {
     timeLeftSpan.innerText = "Süre doldu!";
-    if (buyButton) { // Satın alma butonunu devre dışı bırak
+    if (buyButton) {
       buyButton.disabled = true;
       buyButton.innerText = "Kampanya Süresi Doldu";
     }
-    // Geri sayım bittiğinde interval'ı durdur
     if (window.countdownInterval) {
         clearInterval(window.countdownInterval);
     }
     return;
   }
 
-  // Kalan süreyi saat, dakika, saniye cinsinden hesapla
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-  // Geri sayımı HTML'e yaz
   timeLeftSpan.innerText =
     `${hours.toString().padStart(2,"0")} sa ${minutes.toString().padStart(2,"0")} dk ${seconds.toString().padStart(2,"0")} sn`;
 }
@@ -50,30 +99,28 @@ function updateCountdown() {
 
 // --- API İstekleri ve Veri Yönetimi ---
 
-// Backend'den katılımcı sayısını ve kampanya bitiş tarihini çeker
+// Backend'den katılımcı sayısını ve kampanya bitiş tarihini çeker (Aynı kaldı)
 async function fetchCurrentCountAndCampaignStatus() {
   try {
-    const res = await fetch('http://localhost:3000/api/count');
+    const res = await fetch(`${BASE_URL}/count`);
     const data = await res.json();
     if (data.success) {
       currentCount = data.count;
-      updateProgressBar(); // Progress barı güncelle
+      updateProgressBar();
 
-      // Kampanya bitiş tarihini backend'den al ve Date objesine çevir
       if (data.campaignDeadline) {
           campaignEndTime = new Date(data.campaignDeadline);
-          updateCountdown(); // Tarihi aldıktan sonra geri sayımı hemen güncelle
+          updateCountdown();
       }
 
-      // Eğer kampanya hedefi dolmuşsa veya süresi dolmuşsa butonları ayarla
       if (currentCount >= TARGET_COUNT) {
         const buyButton = document.getElementById("buy-button");
         if (buyButton) {
             buyButton.disabled = true;
             buyButton.innerText = "Kampanya Tamamlandı";
         }
-        document.getElementById("time-left").innerText = "Kampanya Tamamlandı"; // Sayaç yerine mesaj
-        if (window.countdownInterval) { // Sayaç interval'ını durdur
+        document.getElementById("time-left").innerText = "Kampanya Tamamlandı";
+        if (window.countdownInterval) {
             clearInterval(window.countdownInterval);
         }
       }
@@ -82,62 +129,50 @@ async function fetchCurrentCountAndCampaignStatus() {
     }
   } catch (error) {
     console.error('Veri çekilemedi:', error);
+    showNotification("Kampanya bilgileri yüklenirken hata oluştu. Sunucuya ulaşılamadı mı?", "error");
   }
 }
 
-// --- Kullanıcı Bildirim Fonksiyonu ---
+// --- Kullanıcı Bildirim Fonksiyonu --- (Aynı kaldı)
 function showNotification(message, type = 'success') {
-  const mainNotificationDiv = document.getElementById('notification'); // Ana sayfa bildirimi
-  const modalNotificationDiv = document.getElementById('modal-notification'); // Modal içi bildirim
+  const mainNotificationDiv = document.getElementById('notification');
+  const modalNotificationDiv = document.getElementById('modal-notification');
   const purchaseModal = document.getElementById('purchaseModal');
 
   let targetNotificationDiv;
-
-  // Eğer modal açıksa, bildirimi modal içinde göster
-  // CSS'te display:flex yerine JavaScript ile display:block yapıldığını varsayıyoruz.
-  // Daha doğru bir kontrol: computed style almak.
   const modalComputedStyle = window.getComputedStyle(purchaseModal);
 
-  if (modalComputedStyle.display === 'flex') { // Eğer modal görünürse
+  if (modalComputedStyle.display === 'flex') {
       targetNotificationDiv = modalNotificationDiv;
   } else {
       targetNotificationDiv = mainNotificationDiv;
   }
   
-  if (!targetNotificationDiv) { // Eğer bildirim div'i bulunamazsa konsola yaz
+  if (!targetNotificationDiv) {
       console.error("Bildirim div'i bulunamadı. ID hatası olabilir.");
-      alert(message); // Geri dönüş olarak alert kullan
+      alert(message);
       return;
   }
 
   targetNotificationDiv.textContent = message;
-
-  // Önceki sınıfları temizle
   targetNotificationDiv.className = '';
-  targetNotificationDiv.classList.add(type); // 'success' veya 'error' sınıfını ekle
-  targetNotificationDiv.classList.add('visible'); // Görünür yap
+  targetNotificationDiv.classList.add(type);
+  targetNotificationDiv.classList.add('visible');
 
-  // Mesajı belli bir süre sonra otomatik gizle
   setTimeout(() => {
-    targetNotificationDiv.classList.remove('visible'); // Gizle
-    // display: none; geçişten sonra aktif olsun, aksi halde direkt kaybolur
+    targetNotificationDiv.classList.remove('visible');
     setTimeout(() => {
         targetNotificationDiv.style.display = 'none';
-    }, 400); // CSS transition süresine uygun
+    }, 400);
 
-  }, 3000); // 3 saniye sonra kaybolur
-
-  targetNotificationDiv.style.display = 'block'; // Mesajı göstermek için display'i ayarla
+  }, 3000);
+  targetNotificationDiv.style.display = 'block';
 }
 
-// --- Form Girişlerini Akıllı Hale Getirme ---
-
-// Kart Numarası Formatlama
+// --- Form Girişlerini Akıllı Hale Getirme --- (Aynı kaldı)
 function formatCardNumber(event) {
-    let input = event.target.value.replace(/\D/g, ''); // Sadece rakamları al
-    input = input.substring(0, 16); // En fazla 16 hane
-
-    // Her 4 hanede bir boşluk ekle
+    let input = event.target.value.replace(/\D/g, '');
+    input = input.substring(0, 16);
     let formattedInput = '';
     for (let i = 0; i < input.length; i++) {
         if (i > 0 && i % 4 === 0) {
@@ -148,13 +183,10 @@ function formatCardNumber(event) {
     event.target.value = formattedInput;
 }
 
-// Son Kullanma Tarihi Formatlama (AA/YY)
 function formatExpiryDate(event) {
-    let input = event.target.value.replace(/\D/g, ''); // Sadece rakamları al
-    input = input.substring(0, 4); // En fazla 4 hane (MMYY)
-
+    let input = event.target.value.replace(/\D/g, '');
+    input = input.substring(0, 4);
     if (input.length > 2) {
-        // İlk iki haneden sonra '/' ekle
         event.target.value = input.substring(0, 2) + '/' + input.substring(2);
     } else {
         event.target.value = input;
@@ -166,40 +198,48 @@ function formatExpiryDate(event) {
 
 // Satın al butonuna tıklayınca modal'ı aç
 document.getElementById("buy-button").addEventListener("click", () => {
-  const purchaseModal = document.getElementById("purchaseModal");
-  if (purchaseModal) { // Modal elementinin varlığını kontrol edelim
-    purchaseModal.style.display = "flex";
-    // Modal açıldığında varsa önceki hataları temizle
-    const modalNotificationDiv = document.getElementById('modal-notification');
-    if (modalNotificationDiv) {
-      modalNotificationDiv.classList.remove('visible', 'success', 'error');
-      modalNotificationDiv.style.display = 'none';
+    const token = getUserToken();
+    if (!token) {
+        // Kullanıcı giriş yapmamışsa, login sayfasına yönlendir
+        showNotification("Kampanyaya katılmak için lütfen giriş yapın veya kayıt olun.", "error");
+        setTimeout(() => {
+            window.location.href = 'login.html'; // Yönlendirme
+        }, 1500);
+        return;
     }
-  }
+
+    // Kullanıcı giriş yapmışsa modalı aç
+    const purchaseModal = document.getElementById("purchaseModal");
+    if (purchaseModal) {
+        purchaseModal.style.display = "flex";
+        const modalNotificationDiv = document.getElementById('modal-notification');
+        if (modalNotificationDiv) {
+            modalNotificationDiv.classList.remove('visible', 'success', 'error');
+            modalNotificationDiv.style.display = 'none';
+        }
+    }
 });
 
 
-// Modal kapatma butonuna tıklayınca modal'ı kapat
+// Modal kapatma butonuna tıklayınca modal'ı kapat (Aynı kaldı)
 document.getElementById("closeModal").addEventListener("click", () => {
   document.getElementById("purchaseModal").style.display = "none";
 });
 
+// Satın alma formunun submit işlemi (Token'ı Authorization Header'ına ekleyeceğiz)
 document.getElementById("purchaseForm").addEventListener("submit", async function(e) {
   e.preventDefault();
 
   const form = e.target;
-  const submitButton = form.querySelector('button[type="submit"]'); // Submit butonunu seçtik
+  const submitButton = form.querySelector('button[type="submit"]');
 
-  // Butonun yükleme durumunu ayarla
   submitButton.disabled = true;
-  submitButton.innerHTML = 'İşleniyor... <span class="spinner"></span>'; // Metni ve spinner'ı ekle
-  submitButton.classList.add('loading'); // Yükleme sınıfını ekle
+  submitButton.innerHTML = 'İşleniyor... <span class="spinner"></span>';
+  submitButton.classList.add('loading');
 
-  // Clear any existing modal notifications
   const modalNotificationDiv = document.getElementById('modal-notification');
   modalNotificationDiv.classList.remove('visible', 'success', 'error');
   modalNotificationDiv.style.display = 'none';
-
 
   const name = form[0].value.trim();
   const email = form[1].value.trim();
@@ -207,10 +247,9 @@ document.getElementById("purchaseForm").addEventListener("submit", async functio
   const exp = form[3].value.trim();
   const cvc = form[4].value.trim();
 
-  // Frontend Doğrulamaları (Hataları modal içinde gösterir)
+  // Frontend Doğrulamaları (Aynı kaldı)
   if (!name || !email || !card || !exp || !cvc) {
       showNotification("Lütfen tüm alanları doldurun.", "error");
-      // Hata durumunda butonu eski haline getir
       submitButton.disabled = false;
       submitButton.innerHTML = 'Katıl ve Öde';
       submitButton.classList.remove('loading');
@@ -245,12 +284,28 @@ document.getElementById("purchaseForm").addEventListener("submit", async functio
       return;
   }
 
+  // Token'ı Authorization header'ına ekle
+  const token = getUserToken();
+  if (!token) {
+    showNotification("Giriş yapmadığınız için işlem yapılamadı. Lütfen tekrar giriş yapın.", "error");
+    submitButton.disabled = false;
+    submitButton.innerHTML = 'Katıl ve Öde';
+    submitButton.classList.remove('loading');
+    setTimeout(() => {
+        window.location.href = 'login.html';
+    }, 1500);
+    return;
+  }
+
   const data = { name, email, card, exp, cvc };
 
   try {
-    const res = await fetch("http://localhost:3000/api/join", {
+    const res = await fetch(`${BASE_URL}/join`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` // TOKEN BURAYA EKLENDİ!
+      },
       body: JSON.stringify(data)
     });
 
@@ -259,7 +314,7 @@ document.getElementById("purchaseForm").addEventListener("submit", async functio
       await fetchCurrentCountAndCampaignStatus();
       showNotification("Kampanyaya başarıyla katıldınız!", "success");
       document.getElementById("purchaseModal").style.display = "none";
-      form.reset(); // Formu sıfırla
+      form.reset();
     } else {
       showNotification(result.message || "Bir hata oluştu. Lütfen tekrar deneyin.", "error");
     }
@@ -267,16 +322,13 @@ document.getElementById("purchaseForm").addEventListener("submit", async functio
     console.error("Sunucuya ulaşılamadı veya istekte hata oluştu:", err);
     showNotification("Sunucuya ulaşılamadı. Lütfen sunucu durumunu kontrol edin.", "error");
   } finally {
-    // İşlem tamamlandığında (başarılı veya hatalı), butonu eski haline getir
     submitButton.disabled = false;
     submitButton.innerHTML = 'Katıl ve Öde';
     submitButton.classList.remove('loading');
   }
 });
 
-// --- Sayfa Yükleme ve Başlangıç Ayarları ---
-
-// Sayfa ilk yüklendiğinde çalışacak kodlar
+// --- Sayfa Yükleme ve Başlangıç Ayarları --- (Güncellendi)
 document.addEventListener('DOMContentLoaded', () => {
   // Modalı sayfa yüklendiğinde gizle
   const purchaseModal = document.getElementById("purchaseModal");
@@ -284,24 +336,40 @@ document.addEventListener('DOMContentLoaded', () => {
       purchaseModal.style.display = "none";
   }
 
-  // Input alanlarına olay dinleyicileri ekle
+  // Input alanlarına olay dinleyicileri ekle (Aynı kaldı)
   document.querySelector('input[placeholder="Kart numaranızı girin"]').addEventListener('input', formatCardNumber);
   document.querySelector('input[placeholder="12/25"]').addEventListener('input', formatExpiryDate);
   document.querySelector('input[placeholder="Adınızı ve Soyadınızı girin"]').addEventListener('input', (event) => {
-    // Sadece harflere, boşluğa ve tire (-) işaretine izin ver
-    // Türkçe karakterleri de desteklemek için Unicode aralığını kullanabiliriz
     const filteredValue = event.target.value.replace(/[^a-zA-ZğĞüÜşŞıİöÖçÇ\s-]/g, '');
     event.target.value = filteredValue;
+  });
+
+  // Navigasyon butonları için olay dinleyicileri
+  document.getElementById('login-button').addEventListener('click', () => {
+    window.location.href = 'login.html';
+  });
+
+  document.getElementById('register-button').addEventListener('click', () => {
+    window.location.href = 'register.html';
+  });
+
+  document.getElementById('logout-button').addEventListener('click', () => {
+    removeUserToken(); // Token'ı sil
+    updateNavigation(); // Navigasyonu güncelle (Giriş Yap/Kayıt Ol görünür)
+    showNotification("Başarıyla çıkış yaptınız.", "success");
+    // İsteğe bağlı: kullanıcının giriş gerektiren bir sayfadan atılmasını sağlayabilirsiniz
+    // window.location.href = 'index.html'; // Veya başka bir sayfaya yönlendirin
   });
 
   // Hem katılımcı sayısını hem de kampanya durumunu ilk yüklemede çek
   fetchCurrentCountAndCampaignStatus();
 
   // Geri sayımı her saniye güncellemek için interval başlat
-  // Bu interval'ı global scope'a atıyoruz ki gerektiğinde durdurabilelim
   window.countdownInterval = setInterval(updateCountdown, 1000);
 
   // Katılımcı sayısını ve kampanya bitiş tarihini periyodik olarak güncelle (10 saniyede bir)
-  // Bu, yeni kayıtların veya kampanya tarihinin güncellenmesi durumunda frontend'i senkron tutar.
   setInterval(fetchCurrentCountAndCampaignStatus, 10000);
+
+  // Sayfa yüklendiğinde navigasyonu güncelle
+  updateNavigation();
 });

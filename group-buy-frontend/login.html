@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Giriş Yap</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    /* style.css'e ekleyebilirsiniz, ancak şimdilik burada kalsın */
+    .auth-container {
+      max-width: 400px;
+      margin: 50px auto;
+      background: var(--card-background);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px var(--shadow-light);
+      border: 1px solid var(--border-color);
+      text-align: center;
+    }
+    .auth-container h1 {
+      font-size: 2rem;
+      margin-bottom: 25px;
+      color: var(--primary-color);
+    }
+    .auth-container label {
+      display: block;
+      text-align: left;
+      margin-bottom: 8px;
+      margin-top: 15px;
+      font-weight: bold;
+      color: var(--text-color-dark);
+    }
+    .auth-container input[type="text"],
+    .auth-container input[type="email"],
+    .auth-container input[type="password"] {
+      width: calc(100% - 20px);
+      padding: 12px 10px;
+      margin-bottom: 15px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    .auth-container button {
+      width: 100%;
+      background-color: var(--primary-color);
+      color: white;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-top: 20px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 119, 204, 0.2);
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+    .auth-container button:hover {
+      background-color: #005fa3;
+      transform: translateY(-2px);
+    }
+    .auth-container a {
+      display: block;
+      margin-top: 20px;
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+    .auth-container a:hover {
+      text-decoration: underline;
+    }
+    .notification { /* Ana style.css'deki gibi olabilir, ekledim */
+      padding: 10px;
+      margin-top: 15px;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: bold;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.4s ease-in-out;
+    }
+    .notification.success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .notification.error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .notification.visible {
+      display: block;
+      opacity: 1;
+    }
+    .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        border-top: 4px solid var(--primary-color);
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+        vertical-align: middle;
+        margin-left: 10px;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    button.loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        pointer-events: none;
+        opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div id="notification" class="notification"></div>
+    <h1>Giriş Yap</h1>
+    <form id="loginForm">
+      <label for="email">E-posta</label>
+      <input type="email" id="email" placeholder="E-posta adresiniz" required />
+      <label for="password">Şifre</label>
+      <input type="password" id="password" placeholder="Şifreniz" required />
+      <button type="submit">Giriş Yap</button>
+    </form>
+    <a href="register.html">Hesabın yok mu? Kayıt Ol</a>
+  </div>
+
+  <script>
+    const BASE_URL = 'http://localhost:5001/api';
+
+    function showNotification(message, type = 'success') {
+      const notificationDiv = document.getElementById('notification');
+      notificationDiv.textContent = message;
+      notificationDiv.className = `notification ${type} visible`;
+
+      setTimeout(() => {
+        notificationDiv.classList.remove('visible');
+        setTimeout(() => { notificationDiv.style.display = 'none'; }, 400);
+      }, 3000);
+      notificationDiv.style.display = 'block';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const submitButton = e.target.querySelector('button[type="submit"]');
+
+      if (!email || !password) {
+        showNotification("Lütfen tüm alanları doldurun.", "error");
+        return;
+      }
+
+      submitButton.disabled = true;
+      submitButton.innerHTML = 'Giriş Yapılıyor... <span class="spinner"></span>';
+      submitButton.classList.add('loading');
+
+      try {
+        const response = await fetch(`${BASE_URL}/users/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) { // HTTP status 200-299
+          showNotification(data.message, "success");
+          localStorage.setItem('userToken', data.token); // Token'ı kaydet
+          // Kullanıcı giriş yaptıktan sonra ana sayfaya yönlendir
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 1500);
+        } else {
+          showNotification(data.message || 'Giriş başarısız oldu.', 'error');
+        }
+      } catch (error) {
+        console.error('Giriş sırasında hata:', error);
+        showNotification('Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edin.', 'error');
+      } finally {
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Giriş Yap';
+        submitButton.classList.remove('loading');
+      }
+    });
+  </script>
+</body>
+</html>
