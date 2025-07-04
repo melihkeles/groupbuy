@@ -6,11 +6,12 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  // Lütfen bu satırı şöyle değiştirin:
+  output   = "../node_modules/.prisma/client" // <--- BU KESİNLİKLE DOĞRU OLMALI
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "postgresql" // veya sqlite
   url      = env("DATABASE_URL")
 }
 
