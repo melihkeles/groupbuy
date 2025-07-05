@@ -1,72 +1,29 @@
 // group-buy-frontend/script.js
-const BASE_URL = 'http://localhost:5001/api';
+
+// BASE_URL common.js'den geliyor, burada tekrar tanımlamaya gerek yok.
+// const BASE_URL = 'http://localhost:5001/api'; // Kaldırıldı
 
 const TARGET_COUNT = 500;
 let currentCount = 0;
 let campaignEndTime;
 
 // --- Kullanıcı Bilgisi ve Token Yönetimi ---
-function getUserToken() {
-    return localStorage.getItem('userToken');
-}
-
-function removeUserToken() {
-    localStorage.removeItem('userToken');
-}
-
-// Token'dan kullanıcı adını/e-postasını çözmek için (sadece görüntüleme amaçlı)
-function decodeToken(token) {
-    try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-        return JSON.parse(jsonPayload);
-    } catch (e) {
-        console.error("Token çözme hatası:", e);
-        return null;
-    }
-}
-
-// Navigasyon butonlarını ve karşılama mesajını güncelleme
-function updateNavigation() {
-    const token = getUserToken();
-    const loginButton = document.getElementById('login-button');
-    const registerButton = document.getElementById('register-button');
-    const logoutButton = document.getElementById('logout-button');
-    const welcomeMessage = document.getElementById('welcome-message');
-
-    if (token) {
-        // Kullanıcı giriş yapmış
-        const decoded = decodeToken(token);
-        if (decoded && decoded.userEmail) { // Veya decoded.userName, eğer token'a ekliyorsanız
-            welcomeMessage.textContent = `Hoş geldiniz, ${decoded.userEmail}!`;
-        } else {
-            welcomeMessage.textContent = `Hoş geldiniz!`;
-        }
-        loginButton.style.display = 'none';
-        registerButton.style.display = 'none';
-        logoutButton.style.display = 'inline-block';
-    } else {
-        // Kullanıcı giriş yapmamış
-        welcomeMessage.textContent = '';
-        loginButton.style.display = 'inline-block';
-        registerButton.style.display = 'inline-block';
-        logoutButton.style.display = 'none';
-    }
-}
+// Bu fonksiyonlar common.js'e taşındı. Burada tekrar tanımlanmayacak.
+// function getUserToken() { ... }
+// function removeUserToken() { ... }
+// function decodeToken(token) { ... }
+// function updateNavigation() { ... }
 
 // --- Ortak Yardımcı Fonksiyonlar ---
 
-// Progress bar ve sayaç güncelleme fonksiyonu (Aynı kaldı)
+// Progress bar ve sayaç güncelleme fonksiyonu (Aynı kaldı, çünkü bu kampanya sayfasına özel)
 function updateProgressBar() {
   const percent = (currentCount / TARGET_COUNT) * 100;
   document.getElementById("progress").style.width = `${percent}%`;
   document.getElementById("current-count").textContent = currentCount;
 }
 
-// Geri sayım mantığı (Aynı kaldı)
+// Geri sayım mantığı (Aynı kaldı, kampanya sayfasına özel)
 function updateCountdown() {
   if (!campaignEndTime) return;
 
@@ -102,7 +59,7 @@ function updateCountdown() {
 // Backend'den katılımcı sayısını ve kampanya bitiş tarihini çeker (Aynı kaldı)
 async function fetchCurrentCountAndCampaignStatus() {
   try {
-    const res = await fetch(`${BASE_URL}/count`);
+    const res = await fetch(`${BASE_URL}/count`); // BASE_URL common.js'den kullanılacak
     const data = await res.json();
     if (data.success) {
       currentCount = data.count;
@@ -129,45 +86,18 @@ async function fetchCurrentCountAndCampaignStatus() {
     }
   } catch (error) {
     console.error('Veri çekilemedi:', error);
-    showNotification("Kampanya bilgileri yüklenirken hata oluştu. Sunucuya ulaşılamadı mı?", "error");
+    // showNotification fonksiyonu common.js'den geldiği için global olarak erişilebilir olmalı.
+    if (typeof showNotification === 'function') {
+        showNotification("Kampanya bilgileri yüklenirken hata oluştu. Sunucuya ulaşılamadı mı?", "error");
+    } else {
+        alert("Kampanya bilgileri yüklenirken hata oluştu. Sunucuya ulaşılamadı mı?");
+    }
   }
 }
 
-// --- Kullanıcı Bildirim Fonksiyonu --- (Aynı kaldı)
-function showNotification(message, type = 'success') {
-  const mainNotificationDiv = document.getElementById('notification');
-  const modalNotificationDiv = document.getElementById('modal-notification');
-  const purchaseModal = document.getElementById('purchaseModal');
-
-  let targetNotificationDiv;
-  const modalComputedStyle = window.getComputedStyle(purchaseModal);
-
-  if (modalComputedStyle.display === 'flex') {
-      targetNotificationDiv = modalNotificationDiv;
-  } else {
-      targetNotificationDiv = mainNotificationDiv;
-  }
-  
-  if (!targetNotificationDiv) {
-      console.error("Bildirim div'i bulunamadı. ID hatası olabilir.");
-      alert(message);
-      return;
-  }
-
-  targetNotificationDiv.textContent = message;
-  targetNotificationDiv.className = '';
-  targetNotificationDiv.classList.add(type);
-  targetNotificationDiv.classList.add('visible');
-
-  setTimeout(() => {
-    targetNotificationDiv.classList.remove('visible');
-    setTimeout(() => {
-        targetNotificationDiv.style.display = 'none';
-    }, 400);
-
-  }, 3000);
-  targetNotificationDiv.style.display = 'block';
-}
+// --- Kullanıcı Bildirim Fonksiyonu ---
+// showNotification fonksiyonu common.js'e taşındı. Burada tekrar tanımlanmayacak.
+// function showNotification(message, type = 'success') { ... }
 
 // --- Form Girişlerini Akıllı Hale Getirme --- (Aynı kaldı)
 function formatCardNumber(event) {
@@ -198,10 +128,16 @@ function formatExpiryDate(event) {
 
 // Satın al butonuna tıklayınca modal'ı aç
 document.getElementById("buy-button").addEventListener("click", () => {
-    const token = getUserToken();
+    // getUserToken common.js'den gelecek
+    const token = getUserToken(); // `getUserToken()` common.js'den geliyor
+
     if (!token) {
         // Kullanıcı giriş yapmamışsa, login sayfasına yönlendir
-        showNotification("Kampanyaya katılmak için lütfen giriş yapın veya kayıt olun.", "error");
+        if (typeof showNotification === 'function') {
+            showNotification("Kampanyaya katılmak için lütfen giriş yapın veya kayıt olun.", "error");
+        } else {
+            alert("Kampanyaya katılmak için lütfen giriş yapın veya kayıt olun.");
+        }
         setTimeout(() => {
             window.location.href = 'login.html'; // Yönlendirme
         }, 1500);
@@ -211,7 +147,7 @@ document.getElementById("buy-button").addEventListener("click", () => {
     // Kullanıcı giriş yapmışsa modalı aç
     const purchaseModal = document.getElementById("purchaseModal");
     if (purchaseModal) {
-        purchaseModal.style.display = "flex";
+        purchaseModal.style.display = "flex"; // Modal'ı görünür yap
         const modalNotificationDiv = document.getElementById('modal-notification');
         if (modalNotificationDiv) {
             modalNotificationDiv.classList.remove('visible', 'success', 'error');
@@ -226,7 +162,7 @@ document.getElementById("closeModal").addEventListener("click", () => {
   document.getElementById("purchaseModal").style.display = "none";
 });
 
-// Satın alma formunun submit işlemi (Token'ı Authorization Header'ına ekleyeceğiz)
+// Satın alma formunun submit işlemi
 document.getElementById("purchaseForm").addEventListener("submit", async function(e) {
   e.preventDefault();
 
@@ -238,8 +174,10 @@ document.getElementById("purchaseForm").addEventListener("submit", async functio
   submitButton.classList.add('loading');
 
   const modalNotificationDiv = document.getElementById('modal-notification');
-  modalNotificationDiv.classList.remove('visible', 'success', 'error');
-  modalNotificationDiv.style.display = 'none';
+  if (modalNotificationDiv) { // modalNotificationDiv'in varlığını kontrol et
+      modalNotificationDiv.classList.remove('visible', 'success', 'error');
+      modalNotificationDiv.style.display = 'none';
+  }
 
   const name = form[0].value.trim();
   const email = form[1].value.trim();
@@ -249,35 +187,55 @@ document.getElementById("purchaseForm").addEventListener("submit", async functio
 
   // Frontend Doğrulamaları (Aynı kaldı)
   if (!name || !email || !card || !exp || !cvc) {
-      showNotification("Lütfen tüm alanları doldurun.", "error");
+      if (typeof showNotification === 'function') {
+          showNotification("Lütfen tüm alanları doldurun.", "error", 'modal-notification'); // modal'a özel bildirim
+      } else {
+          alert("Lütfen tüm alanları doldurun.");
+      }
       submitButton.disabled = false;
       submitButton.innerHTML = 'Katıl ve Öde';
       submitButton.classList.remove('loading');
       return;
   }
   if (!/\S+@\S+\.\S+/.test(email)) {
-      showNotification("Lütfen geçerli bir e-posta adresi girin.", "error");
+      if (typeof showNotification === 'function') {
+          showNotification("Lütfen geçerli bir e-posta adresi girin.", "error", 'modal-notification');
+      } else {
+          alert("Lütfen geçerli bir e-posta adresi girin.");
+      }
       submitButton.disabled = false;
       submitButton.innerHTML = 'Katıl ve Öde';
       submitButton.classList.remove('loading');
       return;
   }
   if (card.length !== 16 || isNaN(card)) {
-      showNotification("Lütfen 16 haneli geçerli bir kart numarası girin.", "error");
+      if (typeof showNotification === 'function') {
+          showNotification("Lütfen 16 haneli geçerli bir kart numarası girin.", "error", 'modal-notification');
+      } else {
+          alert("Lütfen 16 haneli geçerli bir kart numarası girin.");
+      }
       submitButton.disabled = false;
       submitButton.innerHTML = 'Katıl ve Öde';
       submitButton.classList.remove('loading');
       return;
   }
   if (!/^\d{2}\/\d{2}$/.test(exp)) {
-      showNotification("Lütfen geçerli bir son kullanma tarihi (AA/YY) girin.", "error");
+      if (typeof showNotification === 'function') {
+          showNotification("Lütfen geçerli bir son kullanma tarihi (AA/YY) girin.", "error", 'modal-notification');
+      } else {
+          alert("Lütfen geçerli bir son kullanma tarihi (AA/YY) girin.");
+      }
       submitButton.disabled = false;
       submitButton.innerHTML = 'Katıl ve Öde';
       submitButton.classList.remove('loading');
       return;
   }
   if (cvc.length !== 3 || isNaN(cvc)) {
-      showNotification("Lütfen 3 haneli geçerli bir CVC kodu girin.", "error");
+      if (typeof showNotification === 'function') {
+          showNotification("Lütfen 3 haneli geçerli bir CVC kodu girin.", "error", 'modal-notification');
+      } else {
+          alert("Lütfen 3 haneli geçerli bir CVC kodu girin.");
+      }
       submitButton.disabled = false;
       submitButton.innerHTML = 'Katıl ve Öde';
       submitButton.classList.remove('loading');
@@ -285,9 +243,14 @@ document.getElementById("purchaseForm").addEventListener("submit", async functio
   }
 
   // Token'ı Authorization header'ına ekle
+  // getUserToken common.js'den gelecek
   const token = getUserToken();
   if (!token) {
-    showNotification("Giriş yapmadığınız için işlem yapılamadı. Lütfen tekrar giriş yapın.", "error");
+    if (typeof showNotification === 'function') {
+        showNotification("Giriş yapmadığınız için işlem yapılamadı. Lütfen tekrar giriş yapın.", "error", 'modal-notification');
+    } else {
+        alert("Giriş yapmadığınız için işlem yapılamadı. Lütfen tekrar giriş yapın.");
+    }
     submitButton.disabled = false;
     submitButton.innerHTML = 'Katıl ve Öde';
     submitButton.classList.remove('loading');
@@ -300,9 +263,9 @@ document.getElementById("purchaseForm").addEventListener("submit", async functio
   const data = { name, email, card, exp, cvc };
 
   try {
-    const res = await fetch(`${BASE_URL}/join`, {
+    const res = await fetch(`${BASE_URL}/join`, { // BASE_URL common.js'den kullanılacak
       method: "POST",
-      headers: { 
+      headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}` // TOKEN BURAYA EKLENDİ!
       },
@@ -312,15 +275,27 @@ document.getElementById("purchaseForm").addEventListener("submit", async functio
     const result = await res.json();
     if (result.success) {
       await fetchCurrentCountAndCampaignStatus();
-      showNotification("Kampanyaya başarıyla katıldınız!", "success");
+      if (typeof showNotification === 'function') {
+          showNotification("Kampanyaya başarıyla katıldınız!", "success"); // Ana bildirim alanı
+      } else {
+          alert("Kampanyaya başarıyla katıldınız!");
+      }
       document.getElementById("purchaseModal").style.display = "none";
       form.reset();
     } else {
-      showNotification(result.message || "Bir hata oluştu. Lütfen tekrar deneyin.", "error");
+      if (typeof showNotification === 'function') {
+          showNotification(result.message || "Bir hata oluştu. Lütfen tekrar deneyin.", "error", 'modal-notification');
+      } else {
+          alert(result.message || "Bir hata oluştu. Lütfen tekrar deneyin.");
+      }
     }
   } catch (err) {
     console.error("Sunucuya ulaşılamadı veya istekte hata oluştu:", err);
-    showNotification("Sunucuya ulaşılamadı. Lütfen sunucu durumunu kontrol edin.", "error");
+    if (typeof showNotification === 'function') {
+        showNotification("Sunucuya ulaşılamadı. Lütfen sunucu durumunu kontrol edin.", "error", 'modal-notification');
+    } else {
+        alert("Sunucuya ulaşılamadı. Lütfen sunucu durumunu kontrol edin.");
+    }
   } finally {
     submitButton.disabled = false;
     submitButton.innerHTML = 'Katıl ve Öde';
@@ -340,26 +315,16 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelector('input[placeholder="Kart numaranızı girin"]').addEventListener('input', formatCardNumber);
   document.querySelector('input[placeholder="12/25"]').addEventListener('input', formatExpiryDate);
   document.querySelector('input[placeholder="Adınızı ve Soyadınızı girin"]').addEventListener('input', (event) => {
+    // Sadece harflere, boşluklara ve tire işaretine izin ver
     const filteredValue = event.target.value.replace(/[^a-zA-ZğĞüÜşŞıİöÖçÇ\s-]/g, '');
     event.target.value = filteredValue;
   });
 
-  // Navigasyon butonları için olay dinleyicileri
-  document.getElementById('login-button').addEventListener('click', () => {
-    window.location.href = 'login.html';
-  });
-
-  document.getElementById('register-button').addEventListener('click', () => {
-    window.location.href = 'register.html';
-  });
-
-  document.getElementById('logout-button').addEventListener('click', () => {
-    removeUserToken(); // Token'ı sil
-    updateNavigation(); // Navigasyonu güncelle (Giriş Yap/Kayıt Ol görünür)
-    showNotification("Başarıyla çıkış yaptınız.", "success");
-    // İsteğe bağlı: kullanıcının giriş gerektiren bir sayfadan atılmasını sağlayabilirsiniz
-    // window.location.href = 'index.html'; // Veya başka bir sayfaya yönlendirin
-  });
+  // Navigasyon butonları için olay dinleyicileri common.js'e taşındı.
+  // Burada kalmış olanları kaldırıyoruz.
+  // document.getElementById('login-button').addEventListener('click', () => { ... });
+  // document.getElementById('register-button').addEventListener('click', () => { ... });
+  // document.getElementById('logout-button').addEventListener('click', () => { ... });
 
   // Hem katılımcı sayısını hem de kampanya durumunu ilk yüklemede çek
   fetchCurrentCountAndCampaignStatus();
@@ -370,6 +335,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Katılımcı sayısını ve kampanya bitiş tarihini periyodik olarak güncelle (10 saniyede bir)
   setInterval(fetchCurrentCountAndCampaignStatus, 10000);
 
-  // Sayfa yüklendiğinde navigasyonu güncelle
-  updateNavigation();
+  // Sayfa yüklendiğinde navigasyonu güncelle - common.js'de çağrılıyor.
+  // updateNavigation(); // Bu da common.js'deki checkLoginStatus tarafından halledilecek.
 });

@@ -9,68 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
   <style>
-    /* style.css'e ekleyebilirsiniz, ancak şimdilik burada kalsın */
-    .auth-container {
-      max-width: 400px;
-      margin: 50px auto;
-      background: var(--card-background);
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px var(--shadow-light);
-      border: 1px solid var(--border-color);
-      text-align: center;
-    }
-    .auth-container h1 {
-      font-size: 2rem;
-      margin-bottom: 25px;
-      color: var(--primary-color);
-    }
-    .auth-container label {
-      display: block;
-      text-align: left;
-      margin-bottom: 8px;
-      margin-top: 15px;
-      font-weight: bold;
-      color: var(--text-color-dark);
-    }
-    .auth-container input[type="text"],
-    .auth-container input[type="email"],
-    .auth-container input[type="password"] {
-      width: calc(100% - 20px);
-      padding: 12px 10px;
-      margin-bottom: 15px;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      font-size: 1rem;
-      box-sizing: border-box;
-    }
-    .auth-container button {
-      width: 100%;
-      background-color: var(--primary-color);
-      color: white;
-      padding: 12px 25px;
-      border: none;
-      border-radius: 8px;
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-top: 20px;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0, 119, 204, 0.2);
-      transition: background-color 0.3s ease, transform 0.2s ease;
-    }
-    .auth-container button:hover {
-      background-color: #005fa3;
-      transform: translateY(-2px);
-    }
-    .auth-container a {
-      display: block;
-      margin-top: 20px;
-      color: var(--primary-color);
-      text-decoration: none;
-    }
-    .auth-container a:hover {
-      text-decoration: underline;
-    }
+    
     .notification { /* Ana style.css'deki gibi olabilir, ekledim */
       padding: 10px;
       margin-top: 15px;
@@ -117,9 +56,36 @@
         pointer-events: none;
         opacity: 0.8;
     }
+    /* top-nav stilini buraya veya style.css'e ekleyin */
+    .top-nav {
+        background-color: #f8f9fa; /* light grey */
+        padding: 10px 20px;
+        display: flex;
+        justify-content: flex-end; /* Sağ hizala */
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-bottom: 1px solid #dee2e6; /* light border */
+    }
+    .top-nav button {
+        margin-left: 10px; /* Düğmeler arasında boşluk */
+        /* style.css'den gelen buton stilleri uygulanacak */
+    }
+    .top-nav #welcome-message {
+        margin-right: auto; /* Welcome mesajını sola iter */
+        font-weight: bold;
+        color: #343a40; /* dark text */
+    }
   </style>
 </head>
 <body>
+  <div class="top-nav">
+    <span id="welcome-message"></span>
+    <button id="login-button">Giriş Yap</button>
+    <button id="register-button">Kayıt Ol</button>
+    <button id="profile-button">Profilim</button>
+    <button id="admin-button">Admin Paneli</button>
+    <button id="logout-button">Çıkış Yap</button>
+  </div>
   <div class="auth-container">
     <div id="notification" class="notification"></div>
     <h1>Giriş Yap</h1>
@@ -133,20 +99,9 @@
     <a href="register.html">Hesabın yok mu? Kayıt Ol</a>
   </div>
 
-  <script>
-    const BASE_URL = 'http://localhost:5001/api';
-
-    function showNotification(message, type = 'success') {
-      const notificationDiv = document.getElementById('notification');
-      notificationDiv.textContent = message;
-      notificationDiv.className = `notification ${type} visible`;
-
-      setTimeout(() => {
-        notificationDiv.classList.remove('visible');
-        setTimeout(() => { notificationDiv.style.display = 'none'; }, 400);
-      }, 3000);
-      notificationDiv.style.display = 'block';
-    }
+  <script src="common.js"></script> <script>
+    // showNotification fonksiyonu common.js'den geldiği için burada tekrar tanımlamıyoruz.
+    // BASE_URL ve navigasyon fonksiyonları da common.js'den geldi.
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -156,7 +111,7 @@
       const submitButton = e.target.querySelector('button[type="submit"]');
 
       if (!email || !password) {
-        showNotification("Lütfen tüm alanları doldurun.", "error");
+        showNotification("Lütfen tüm alanları doldurun.", "error"); // common.js'den gelen fonksiyon
         return;
       }
 
@@ -174,24 +129,24 @@
         const data = await response.json();
 
         if (response.ok) { // HTTP status 200-299
-          showNotification(data.message, "success");
+          showNotification(data.message, "success"); // common.js'den gelen fonksiyon
           localStorage.setItem('userToken', data.token); // Token'ı kaydet
-          // Kullanıcı giriş yaptıktan sonra ana sayfaya yönlendir
           setTimeout(() => {
             window.location.href = 'index.html';
           }, 1500);
         } else {
-          showNotification(data.message || 'Giriş başarısız oldu.', 'error');
+          showNotification(data.message || 'Giriş başarısız oldu.', 'error'); // common.js'den gelen fonksiyon
         }
       } catch (error) {
         console.error('Giriş sırasında hata:', error);
-        showNotification('Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edin.', 'error');
+        showNotification('Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edin.', 'error'); // common.js'den gelen fonksiyon
       } finally {
         submitButton.disabled = false;
         submitButton.innerHTML = 'Giriş Yap';
         submitButton.classList.remove('loading');
       }
     });
+    // DOMContentLoaded common.js'de çağrıldığı için burada tekrar çağırmıyoruz
   </script>
 </body>
 </html>

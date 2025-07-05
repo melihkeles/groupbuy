@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profilim - Toplu Alım Sitesi</title>
+    <link rel="stylesheet" href="style.css"> 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        /* Bootstrap card stilini geçersiz kılabilir veya kullanabilirsiniz */
+        .card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6; /* Bootstrap varsayılan border */
+        }
+        .table {
+            margin-top: 20px;
+        }
+        .table th, .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .table th {
+            background-color: #f2f2f2;
+        }
+        /* top-nav için stil (eğer style.css'inizde yoksa) */
+        .top-nav {
+            background-color: #f8f9fa; /* light grey */
+            padding: 10px 20px;
+            display: flex;
+            justify-content: flex-end; /* Sağ hizala */
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-bottom: 1px solid #dee2e6; /* light border */
+        }
+        .top-nav button {
+            margin-left: 10px; /* Düğmeler arasında boşluk */
+            /* style.css'den gelen buton stilleri uygulanacak */
+        }
+        .top-nav #welcome-message {
+            margin-right: auto; /* Welcome mesajını sola iter */
+            font-weight: bold;
+            color: #343a40; /* dark text */
+        }
+    </style>
+</head>
+<body>
+    <div class="top-nav">
+        <span id="welcome-message"></span>
+        <button id="login-button">Giriş Yap</button>
+        <button id="register-button">Kayıt Ol</button>
+        <button id="profile-button">Profilim</button>
+        <button id="admin-button">Admin Paneli</button>
+        <button id="logout-button">Çıkış Yap</button>
+    </div>
+
+    <div class="container mt-4">
+        <h2>Profil Bilgileri</h2>
+        <div class="card p-4 mb-4">
+            <p><strong>Ad:</strong> <span id="userName">Yükleniyor...</span></p>
+            <p><strong>E-posta:</strong> <span id="userEmail">Yükleniyor...</span></p>
+            <p><strong>Kayıt Tarihi:</strong> <span id="userCreatedAt">Yükleniyor...</span></p>
+        </div>
+
+        <h3 class="mt-5">Katıldığım Kampanyalar</h3>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Katılım ID</th>
+                        <th>Ad</th>
+                        <th>E-posta</th>
+                        <th>Kayıt Tarihi</th>
+                    </tr>
+                </thead>
+                <tbody id="participationsBody">
+                    <tr><td colspan="4">Katılımlar yükleniyor...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="common.js"></script> <script>
+        // BASE_URL ve navigasyon fonksiyonları common.js'den geldiği için burada tekrar tanımlamıyoruz.
+
+        async function loadProfileData() {
+            const token = getUserToken(); // common.js'den gelen fonksiyon
+            if (!token) {
+                document.getElementById('userName').textContent = 'Giriş yapınız.';
+                document.getElementById('userEmail').textContent = 'Giriş yapınız.';
+                document.getElementById('userCreatedAt').textContent = 'Giriş yapınız.';
+                document.getElementById('participationsBody').innerHTML = '<tr><td colspan="4">Profil bilgilerini görmek için giriş yapmalısınız.</td></tr>';
+                console.error("Token yok, profil bilgileri alınamadı.");
+                setTimeout(() => { window.location.href = 'login.html'; }, 2000);
+                return;
+            }
+
+            try {
+                // Fetch user profile
+                const userRes = await fetch(`${BASE_URL}/users/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!userRes.ok) {
+                    if (userRes.status === 401 || userRes.status === 403) {
+                        alert("Oturum süresi doldu veya yetkisiz erişim. Lütfen tekrar giriş yapın.");
+                        removeUserToken(); // common.js'den gelen fonksiyon
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    throw new Error(`Kullanıcı bilgileri yüklenirken HTTP hata: ${userRes.status}`);
+                }
+                const userData = await userRes.json();
+                if (userData.success && userData.user) {
+                    document.getElementById('userName').textContent = userData.user.name;
+                    document.getElementById('userEmail').textContent = userData.user.email;
+                    document.getElementById('userCreatedAt').textContent = new Date(userData.user.createdAt).toLocaleDateString('tr-TR');
+                } else {
+                    document.getElementById('userName').textContent = 'Bilgi alınamadı.';
+                    document.getElementById('userEmail').textContent = 'Bilgi alınamadı.';
+                    document.getElementById('userCreatedAt').textContent = 'Bilgi alınamadı.';
+                    console.error("Kullanıcı verisi alınamadı:", userData.message);
+                }
+
+                // Fetch user participations
+                const participationsRes = await fetch(`${BASE_URL}/users/me/participations`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!participationsRes.ok) {
+                     if (participationsRes.status === 401 || participationsRes.status === 403) {
+                        // Already handled by userRes, but good to be explicit
+                        return;
+                    }
+                    throw new Error(`Katılımlar yüklenirken HTTP hata: ${participationsRes.status}`);
+                }
+
+                const participationsData = await participationsRes.json();
+                const participationsBody = document.getElementById('participationsBody');
+                participationsBody.innerHTML = ''; // Clear existing content
+
+                if (participationsData.success && participationsData.participations.length > 0) {
+                    participationsData.participations.forEach(participation => {
+                        const row = `
+                            <tr>
+                                <td>${participation.id.substring(0, 8)}...</td>
+                                <td>${participation.name}</td>
+                                <td>${participation.email}</td>
+                                <td>${new Date(participation.createdAt).toLocaleDateString('tr-TR')}</td>
+                            </tr>
+                        `;
+                        participationsBody.innerHTML += row;
+                    });
+                } else {
+                    participationsBody.innerHTML = '<tr><td colspan="4">Henüz katıldığınız bir kampanya bulunmamaktadır.</td></tr>';
+                }
+
+            } catch (error) {
+                console.error("Profil veya katılımlar yüklenirken bir hata oluştu:", error);
+                document.getElementById('userName').textContent = 'Hata oluştu.';
+                document.getElementById('userEmail').textContent = 'Hata oluştu.';
+                document.getElementById('userCreatedAt').textContent = 'Hata oluştu.';
+                document.getElementById('participationsBody').innerHTML = '<tr><td colspan="4">Bilgiler yüklenirken bir sorun oluştu.</td></tr>';
+            }
+        }
+
+        // Sayfa yüklendiğinde checkLoginStatus common.js'de çağrılıyor.
+        // loadProfileData'yı da orada çağırabiliriz veya burada document.addEventListener('DOMContentLoaded') içine alabiliriz.
+        // Daha temiz olması için burada DCL'ye alalım.
+        document.addEventListener('DOMContentLoaded', loadProfileData);
+    </script>
+</body>
+</html>

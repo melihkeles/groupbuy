@@ -25,18 +25,24 @@ app.use('/api/users', userRoutes);
 // Katılımcı ekleme (JOIN) rotası - ARTIK authMiddleware İLE KORUNUYOR
 // authMiddleware'i ikinci argüman olarak ekliyoruz
 app.post('/api/join', authMiddleware, async (req, res) => {
-    // req.user'dan oturum açmış kullanıcının bilgilerine erişebiliriz.
-    // Örneğin, hangi kullanıcının katıldığını kaydetmek için req.user.userId kullanabiliriz.
-    // Şimdilik sadece e-postayı kullanalım veya req.body'den almaya devam edelim.
-    // Eğer sadece login olan kişi kendi e-postasıyla katılabilsin dersek, req.user.email kullanabiliriz.
-    const { name, email, card, exp, cvc } = req.body; // Veya email: req.user.email;
+    if (!req.user || !req.user.userId) { // authMiddleware'ınızın req.user.userId sağladığını varsayıyoruz
+        return res.status(401).json({ success: false, message: 'Oturum açmış kullanıcı bilgisi bulunamadı. Katılmak için giriş yapmalısınız.' });
+    }
+    const userId = req.user.userId; // Oturum açmış kullanıcının ID'si
+
+    const { name, email, card, exp, cvc } = req.body; 
+    
+    // Güvenlik için e-postayı auth'tan almak daha iyi olabilir:
+    // const email = req.user.email; 
+
     if (!name || !email || !card || !exp || !cvc) {
         return res.status(400).json({ success: false, message: 'Lütfen tüm alanları doldurun.' });
     }
 
     try {
-        const newParticipant = await req.prisma.participant.create({ // req.prisma kullanıyoruz
+        const newParticipant = await req.prisma.participant.create({
             data: {
+                userId: userId, // <<<-- Bu satırı ekledik!
                 name,
                 email,
                 card,
@@ -123,11 +129,91 @@ app.delete('/api/orders/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// Kullanıcının kendi profil bilgilerini alma rotası
+// Sadece giriş yapmış kullanıcılar kendi bilgilerini görebilir
+app.get('/api/users/me', authMiddleware, async (req, res) => {
+  try {
+      // authMiddleware'dan gelen req.user objesindeki userId'yi kullanıyoruz
+      const userId = req.user.userId;
+
+      const user = await req.prisma.user.findUnique({
+          where: {
+              id: userId
+          },
+          select: { // Hassas bilgileri (şifre gibi) göndermemek için seçici davranıyoruz
+              id: true,
+              name: true,
+              email: true,
+              createdAt: true,
+              updatedAt: true
+          }
+      });
+
+      if (!user) {
+          return res.status(404).json({ success: false, message: 'Kullanıcı bulunamadı.' });
+      }
+
+      res.json({ success: true, user: user });
+
+  } catch (error) {
+      console.error('Kullanıcı profil bilgileri alınırken hata oluştu:', error);
+      res.status(500).json({ success: false, message: 'Profil bilgileri alınamadı.', error: error.message });
+  }
+});
+
+// Giriş yapmış kullanıcının kendi katılımlarını listeleme rotası
+// Sadece giriş yapmış kullanıcılar kendi katılımlarını görebilir
+// NOT: Bu rota Participant modelinde userId alanı olduğunu varsayar.
+// Şu anki Participant modelinizde userId alanı yok. Bunu eklememiz gerek.
+app.get('/api/users/me/participations', authMiddleware, async (req, res) => {
+  try {
+      const userId = req.user.userId;
+
+      // Burada iki seçeneğimiz var:
+      // 1. Participant modeline userId alanı eklemek (TERCİH EDİLİR VE DAHA DOĞRU)
+      // 2. Participant email'i ile User email'i eşleşenleri bulmak (Geçici çözüm, daha az güvenilir)
+
+      // Şimdilik 2. seçeneği kullanacağım, ancak en doğrusu 1. seçenektir.
+      // Eğer Participant modelinize userId eklemek isterseniz, bana bildirin,
+      // Prisma schema'yı ve 'join' rotasını güncelleriz.
+
+      const user = await req.prisma.user.findUnique({
+          where: {
+              id: userId
+          },
+          select: {
+              email: true // Kullanıcının e-postasını çekiyoruz
+          }
+      });
+
+      if (!user) {
+          return res.status(404).json({ success: false, message: 'Kullanıcı bulunamadı.' });
+      }
+
+      const userEmail = user.email;
+
+      const participations = await req.prisma.participant.findMany({
+          where: {
+              email: userEmail // Kullanıcının e-postasına göre filtreleme
+          },
+          orderBy: {
+              createdAt: 'desc'
+          }
+      });
+
+      res.json({ success: true, participations: participations });
+
+  } catch (error) {
+      console.error('Kullanıcı katılımları alınırken hata oluştu:', error);
+      res.status(500).json({ success: false, message: 'Katılımlar alınamadı.', error: error.message });
+  }
+});
+
 app.get('/', (req, res) => {
   res.send('Group Buy Backend Çalışıyor!');
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Sunucu ${PORT} portunda çalışıyor.`);
 });

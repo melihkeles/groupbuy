@@ -11,10 +11,12 @@
 </head>
 <body>
   <div class="top-nav">
-    <span id="welcome-message" style="margin-right: 15px; font-weight: bold; color: var(--text-color-dark);"></span>
-    <button id="login-button" style="margin-right: 10px; background-color: var(--primary-color); color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">Giriş Yap</button>
-    <button id="register-button" style="margin-right: 10px; background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">Kayıt Ol</button>
-    <button id="logout-button" style="background-color: #dc3545; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; display: none;">Çıkış Yap</button>
+    <span id="welcome-message"></span>
+    <button id="login-button">Giriş Yap</button>
+    <button id="register-button">Kayıt Ol</button>
+    <button id="profile-button">Profilim</button>
+    <button id="admin-button">Admin Paneli</button>
+    <button id="logout-button">Çıkış Yap</button>
   </div>
   <div class="container">
     <div id="notification" style="display:none; padding: 10px; margin-top: 15px; border-radius: 8px; text-align: center; font-weight: bold;"></div>
@@ -57,6 +59,5 @@
     </div>
   </div>
 
-  <script src="script.js"></script> 
-</body>
+  <script src="common.js"></script> <script src="script.js"></script> </body>
 </html>

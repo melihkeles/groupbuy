@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin Panel - Siparişler</title>
+  <link rel="stylesheet" href="style.css"> 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     h1 { text-align: center; }
@@ -13,11 +17,36 @@
     tr:nth-child(even) { background-color: #f9f9f9; }
     .delete-btn { background-color: #f44336; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
     .delete-btn:hover { background-color: #da190b; }
+    /* top-nav stilini buraya veya style.css'e ekleyin */
+    .top-nav {
+        background-color: #f8f9fa; /* light grey */
+        padding: 10px 20px;
+        display: flex;
+        justify-content: flex-end; /* Sağ hizala */
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-bottom: 1px solid #dee2e6; /* light border */
+    }
+    .top-nav button {
+        margin-left: 10px; /* Düğmeler arasında boşluk */
+        /* style.css'den gelen buton stilleri uygulanacak */
+    }
+    .top-nav #welcome-message {
+        margin-right: auto; /* Welcome mesajını sola iter */
+        font-weight: bold;
+        color: #343a40; /* dark text */
+    }
   </style>
 </head>
 <body>
+  <div class="top-nav">
+    <span id="welcome-message"></span> <button id="login-button">Giriş Yap</button>
+    <button id="register-button">Kayıt Ol</button>
+    <button id="profile-button">Profilim</button>
+    <button id="admin-button">Admin Paneli</button>
+    <button id="logout-button">Çıkış Yap</button>
+  </div>
   <h1>Admin Panel - Toplu Alım Siparişleri</h1>
-  <button id="back-to-home" style="margin: 10px; padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Ana Sayfaya Dön</button>
   <table>
     <thead>
       <tr>
@@ -28,44 +57,46 @@
         <th>Son Kullanma</th>
         <th>CVC</th>
         <th>Tarih</th>
-        <th>İşlem</th> </tr>
+        <th>İşlem</th>
+      </tr>
     </thead>
     <tbody id="orders-body">
-      <tr><td colspan="8">Yükleniyor...</td></tr> </tbody>
+      <tr><td colspan="8">Yükleniyor...</td></tr>
+    </tbody>
   </table>
 
-  <script>
-    const BASE_URL = 'http://localhost:5001/api'; // BASE_URL tanımını ekleyin
-    
-    function getUserToken() { // Token alma fonksiyonunu ekleyin
-        return localStorage.getItem('userToken');
-    }
+  <script src="common.js"></script> <script>
+    // BASE_URL ve navigasyon fonksiyonları common.js'den geldiği için burada tekrar tanımlamıyoruz.
+    // Sadece bu sayfaya özgü fonksiyonlar kalacak.
 
     async function loadOrders() {
       const tbody = document.getElementById('orders-body');
-      const token = getUserToken(); // Token'ı al
+      const token = getUserToken(); // common.js'den gelen fonksiyon
 
       if (!token) {
           tbody.innerHTML = '<tr><td colspan="8">Yönetici paneline erişmek için giriş yapmalısınız.</td></tr>';
           console.error("Token yok, admin paneline erişim engellendi.");
-          // Kullanıcıyı login sayfasına yönlendirebilirsiniz
           setTimeout(() => { window.location.href = 'login.html'; }, 2000);
           return;
       }
 
       try {
-        const res = await fetch(`${BASE_URL}/orders`, { // BASE_URL kullanıldı
+        const res = await fetch(`${BASE_URL}/orders`, {
             headers: {
-                'Authorization': `Bearer ${token}` // TOKEN BURAYA EKLENDİ!
+                'Authorization': `Bearer ${token}`
             }
         });
         const data = await res.json();
 
         // Eğer backend'den 401/403 gibi bir hata dönerse
-        if (!res.ok && (response.status === 401 || response.status === 403)) {
-            tbody.innerHTML = '<tr><td colspan="8">Yetkisiz erişim. Lütfen tekrar giriş yapın.</td></tr>';
-            removeUserToken(); // Geçersiz token'ı sil
-            setTimeout(() => { window.location.href = 'login.html'; }, 2000);
+        if (!res.ok) { // res.ok false ise hata var demektir
+            if (res.status === 401 || res.status === 403) {
+                tbody.innerHTML = '<tr><td colspan="8">Yetkisiz erişim. Lütfen tekrar giriş yapın.</td></tr>';
+                removeUserToken(); // Geçersiz token'ı sil
+                setTimeout(() => { window.location.href = 'login.html'; }, 2000);
+            } else {
+                tbody.innerHTML = `<tr><td colspan="8">Veri alınırken hata: ${data.message || res.statusText}</td></tr>`;
+            }
             return;
         }
 
@@ -83,13 +114,13 @@
         data.orders.forEach(order => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td>${order.id}</td> <td>${order.name}</td>
+            <td>${order.id}</td>
+            <td>${order.name}</td>
             <td>${order.email}</td>
             <td>${order.card}</td>
             <td>${order.exp}</td>
             <td>${order.cvc}</td>
-            <td>${order.created_at}</td>
-            <td><button class="delete-btn" data-order-id="${order.id}">Sil</button></td> `;
+            <td>${new Date(order.createdAt).toLocaleDateString('tr-TR')}</td> <td><button class="delete-btn" data-order-id="${order.id}">Sil</button></td> `;
           tbody.appendChild(tr);
         });
 
@@ -106,7 +137,7 @@
             return;
         }
 
-        const token = getUserToken(); // Token'ı al
+        const token = getUserToken(); // common.js'den gelen fonksiyon
         if (!token) {
             alert("Giriş yapmadığınız için silme işlemi yapılamadı.");
             setTimeout(() => { window.location.href = 'login.html'; }, 1500);
@@ -114,35 +145,36 @@
         }
 
         try {
-            const response = await fetch(`${BASE_URL}/orders/${orderId}`, { // BASE_URL kullanıldı
+            const response = await fetch(`${BASE_URL}/orders/${orderId}`, {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${token}` // TOKEN BURAYA EKLENDİ!
+                    'Authorization': `Bearer ${token}`
                 }
             });
 
             const data = await response.json();
 
             if (response.ok) { // HTTP status 200-299
-                alert(data.message);
+                showNotification(data.message || 'Sipariş başarıyla silindi.', 'success'); // common.js'den gelen fonksiyon
                 loadOrders();
             } else if (response.status === 401 || response.status === 403) {
-                alert("Yetkisiz işlem. Lütfen tekrar giriş yapın.");
+                showNotification("Yetkisiz işlem. Lütfen tekrar giriş yapın.", 'error'); // common.js'den gelen fonksiyon
                 removeUserToken();
                 setTimeout(() => { window.location.href = 'login.html'; }, 1500);
             }
             else {
-                alert(`Silme başarısız: ${data.message}`);
+                showNotification(`Silme başarısız: ${data.message || response.statusText}`, 'error'); // common.js'den gelen fonksiyon
             }
         } catch (error) {
             console.error("Silme isteği gönderilirken hata oluştu:", error);
-            alert("Sipariş silinirken bir hata oluştu.");
+            showNotification("Sipariş silinirken bir hata oluştu.", 'error'); // common.js'den gelen fonksiyon
         }
     }
 
     function attachDeleteEventListeners() {
         const deleteButtons = document.querySelectorAll('.delete-btn');
         deleteButtons.forEach(button => {
+            // Her eklemeden önce mevcut dinleyiciyi kaldırın, böylece yinelenmez.
             button.removeEventListener('click', handleButtonClick);
             button.addEventListener('click', handleButtonClick);
         });
@@ -153,12 +185,7 @@
         deleteOrder(orderId);
     }
 
-    // Ana sayfaya dön butonu
-    document.getElementById('back-to-home').addEventListener('click', () => {
-        window.location.href = 'index.html';
-    });
-
-    // Sayfa yüklendiğinde siparişleri yükle
+    // Sayfa yüklendiğinde siparişleri yükle (common.js'deki DOMContentLoaded'dan sonra çalışması için window.onload kullanıyoruz)
     window.onload = loadOrders;
   </script>
 </body>

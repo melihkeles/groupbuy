@@ -15,21 +15,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Participant {
+model User {
   id        String   @id @default(uuid())
   name      String
   email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  participations Participant[]
+}
+
+model Participant {
+  id        String   @id @default(uuid())
+  name      String
+  email      String
   card      String
   exp       String
   cvc       String
   createdAt DateTime @default(now())
-}
-
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  userId    String // ? kaldırıldı
+  user      User     @relation(fields: [userId], references: [id])
 }
