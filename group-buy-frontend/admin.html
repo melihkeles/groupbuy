@@ -113,6 +113,16 @@
         tbody.innerHTML = '';
         data.orders.forEach(order => {
           const tr = document.createElement('tr');
+          // Backend'den 'created_at' olarak gelen ISO string'i doğru şekilde formatlayalım
+          const orderDate = new Date(order.created_at); // Backend'den gelen 'created_at' alanını kullan
+          const formattedDate = orderDate.toLocaleString('tr-TR', {
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          });
           tr.innerHTML = `
             <td>${order.id}</td>
             <td>${order.name}</td>
@@ -120,7 +130,8 @@
             <td>${order.card}</td>
             <td>${order.exp}</td>
             <td>${order.cvc}</td>
-            <td>${new Date(order.createdAt).toLocaleDateString('tr-TR')}</td> <td><button class="delete-btn" data-order-id="${order.id}">Sil</button></td> `;
+            <td>${formattedDate}</td> <td><button class="delete-btn" data-order-id="${order.id}">Sil</button></td>
+          `;
           tbody.appendChild(tr);
         });
 

