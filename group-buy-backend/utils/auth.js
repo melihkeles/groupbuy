@@ -15,8 +15,8 @@ const comparePassword = async (password, hashedPassword) => {
 };
 
 // JWT oluşturma fonksiyonu
-const generateToken = (userId) => {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '1h' }); // 1 saat geçerli token
+const generateToken = (userId, role) => { // role parametresini ekle
+  return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: '1h' });
 };
 
 // JWT doğrulama (middleware olarak kullanılacak)

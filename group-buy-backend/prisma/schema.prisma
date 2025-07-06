@@ -20,6 +20,7 @@ model User {
   name      String
   email     String   @unique
   password  String
+  role      String   @default("USER") // 'USER' veya 'ADMIN'
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   participations Participant[]
@@ -29,9 +30,6 @@ model Participant {
   id        String   @id @default(uuid())
   name      String
   email      String
-  card      String
-  exp       String
-  cvc       String
   createdAt DateTime @default(now())
   userId    String // ? kaldırıldı
   user      User     @relation(fields: [userId], references: [id])

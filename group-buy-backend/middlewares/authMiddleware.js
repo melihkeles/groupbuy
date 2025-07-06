@@ -32,4 +32,13 @@ const authMiddleware = (req, res, next) => {
     }
 };
 
-module.exports = authMiddleware;
+const adminAuthMiddleware = (req, res, next) => {
+    // Bu middleware, authMiddleware'dan sonra çağrılmalı, bu yüzden req.user mevcut olmalı
+    if (req.user && req.user.role === 'ADMIN') { // Token'dan gelen rolü kontrol et
+        next();
+    } else {
+        return res.status(403).json({ success: false, message: 'Bu işleme yetkiniz yok.' });
+    }
+};
+
+module.exports = { authMiddleware, adminAuthMiddleware }; // İkisi birlikte export ediliyor

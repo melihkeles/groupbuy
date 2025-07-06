@@ -7,7 +7,7 @@ const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
 
 const userRoutes = require('./routes/user');
-const authMiddleware = require('./middlewares/authMiddleware'); // authMiddleware'ı import et
+const { authMiddleware, adminAuthMiddleware } = require('./middlewares/authMiddleware'); // Buradan import et
 
 const app = express();
 const prisma = new PrismaClient(); // PrismaClient örneği burada oluşturuluyor
@@ -45,12 +45,13 @@ app.post('/api/join', authMiddleware, async (req, res) => {
                 userId: userId, // <<<-- Bu satırı ekledik!
                 name,
                 email,
-                card,
-                exp,
-                cvc,
+                //card,
+                //exp,
+                //cvc,
             },
         });
-        res.status(201).json({ success: true, message: 'Kampanyaya başarıyla katıldınız!', participant: newParticipant });
+        console.log(`Simülasyon: Kullanıcı ${name} (${email}) kampanyaya katıldı. Kart bilgileri depolanmadı.`);
+        res.status(201).json({ success: true, message: 'Kampanyaya başarıyla katıldınız! (Ödeme bilgileri işlenmedi/depolanmadı)' });
     } catch (error) {
         console.error('Katılımcı eklenirken hata oluştu:', error);
         if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
@@ -76,7 +77,7 @@ app.get('/api/count', async (req, res) => {
 });
 
 // Tüm katılımcıları/siparişleri listeleme rotası (Admin Paneli için)
-app.get('/api/orders', authMiddleware, async (req, res) => {
+app.get('/api/orders', authMiddleware, adminAuthMiddleware, async (req, res) => {
     try {
         const participants = await req.prisma.participant.findMany({
             orderBy: {
@@ -103,7 +104,7 @@ app.get('/api/orders', authMiddleware, async (req, res) => {
   });
 
 // Katılımcı/Sipariş silme rotası (Admin Paneli için)
-app.delete('/api/orders/:id', authMiddleware, async (req, res) => {
+app.delete('/api/orders/:id', authMiddleware, adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
 
   try {
