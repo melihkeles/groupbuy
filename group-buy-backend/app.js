@@ -7,6 +7,7 @@ const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
 
 const userRoutes = require('./routes/user');
+const addressRoutes = require('./routes/address');
 const { authMiddleware, adminAuthMiddleware } = require('./middlewares/authMiddleware'); // Buradan import et
 
 const app = express();
@@ -21,6 +22,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/users', userRoutes);
+app.use('/api/addresses', addressRoutes);
 
 // Katılımcı ekleme (JOIN) rotası - ARTIK authMiddleware İLE KORUNUYOR
 // authMiddleware'i ikinci argüman olarak ekliyoruz
@@ -172,29 +174,14 @@ app.get('/api/users/me/participations', authMiddleware, async (req, res) => {
       // Eğer Participant modelinize userId eklemek isterseniz, bana bildirin,
       // Prisma schema'yı ve 'join' rotasını güncelleriz.
 
-      const user = await req.prisma.user.findUnique({
-          where: {
-              id: userId
-          },
-          select: {
-              email: true // Kullanıcının e-postasını çekiyoruz
-          }
-      });
-
-      if (!user) {
-          return res.status(404).json({ success: false, message: 'Kullanıcı bulunamadı.' });
-      }
-
-      const userEmail = user.email;
-
-      const participations = await req.prisma.participant.findMany({
-          where: {
-              email: userEmail // Kullanıcının e-postasına göre filtreleme
-          },
-          orderBy: {
-              createdAt: 'desc'
-          }
-      });
+const participations = await req.prisma.participant.findMany({
+    where: {
+        userId: userId // Participant modelindeki userId alanına göre filtreleyin
+    },
+    orderBy: {
+        createdAt: 'desc'
+    }
+});
 
       res.json({ success: true, participations: participations });
 

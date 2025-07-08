@@ -24,6 +24,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   participations Participant[]
+  addresses    Address[]     // Kullanıcının sahip olduğu adresler
 }
 
 model Participant {
@@ -33,4 +34,24 @@ model Participant {
   createdAt DateTime @default(now())
   userId    String // ? kaldırıldı
   user      User     @relation(fields: [userId], references: [id])
+}
+
+// Yeni Adres Modeli
+model Address {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id])
+  title        String?   // Ev, İş, Ofis gibi başlık
+  fullName     String    // Ad Soyad (teslim alacak kişinin)
+  phone        String    // Telefon numarası
+  country      String    // Ülke (şimdilik TR olabilir)
+  city         String    // Şehir
+  district     String?   // İlçe
+  neighborhood String?   // Mahalle
+  addressLine1 String    // Adres satırı 1 (Cadde, Sokak, Bina No)
+  addressLine2 String?   // Adres satırı 2 (Daire No, Kat)
+  zipCode      String?   // Posta Kodu
+  isDefault    Boolean   @default(false) // Varsayılan adres mi?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }

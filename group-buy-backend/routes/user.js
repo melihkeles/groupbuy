@@ -1,17 +1,15 @@
 const express = require('express');
-// const { PrismaClient } = require('@prisma/client'); // BU SATIRI SİLİN VEYA YORUM SATIRI YAPIN
 const { hashPassword, comparePassword, generateToken } = require('../utils/auth');
 
 const router = express.Router();
-// const prisma = new PrismaClient(); // BU SATIRI SİLİN VEYA YORUM SATIRI YAPIN
 
 // Kullanıcı Kayıt (Register)
 router.post('/register', async (req, res) => {
   const { email, password, name } = req.body;
   const prisma = req.prisma; // PrismaClient'ı req objesinden al
 
-  if (!email || !password) {
-    return res.status(400).json({ message: 'E-posta ve parola gerekli.' });
+  if (!email || !password || !name) {
+    return res.status(400).json({ message: 'E-posta, parola ve ad gerekli.' });
   }
 
   try {
@@ -30,7 +28,7 @@ router.post('/register', async (req, res) => {
       },
     });
 
-    const token = generateToken(user.id, user.role);
+    const token = generateToken(user.id, user.role, user.name);
     res.status(201).json({ message: 'Kullanıcı başarıyla kaydedildi.', token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
   } catch (error) {
     console.error('Kayıt hatası:', error);

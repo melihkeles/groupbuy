@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hesabım - Grup Satın Alma Kampanyası</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="top-nav">
+      <span id="welcome-message"></span>
+      <a href="login.html" id="login-button" class="button">Giriş Yap</a>
+      <a href="register.html" id="register-button" class="button">Kayıt Ol</a>
+      <a href="account.html" id="account-button" class="button">Hesabım</a> <a href="admin.html" id="admin-button" class="button">Admin Paneli</a>
+      <a href="#" id="logout-button" class="button">Çıkış Yap</a>
+    </div>
+
+    <div class="container auth-container account-page-container">
+      <h1>Hesabım</h1>
+
+      <div class="tabs">
+        <button class="tab-button active" data-tab="profile">Profil Bilgilerim</button>
+        <button class="tab-button" data-tab="addresses">Adreslerim</button>
+        <button class="tab-button" data-tab="orders">Siparişlerim</button>
+      </div>
+
+      <div id="account-notification" class="notification" style="display: none;"></div>
+
+      <div id="profile-tab" class="tab-content active">
+        <h2>Kullanıcı Bilgileri</h2>
+        <p><strong>Ad:</strong> <span id="user-name">Yükleniyor...</span></p>
+        <p><strong>E-posta:</strong> <span id="user-email">Yükleniyor...</span></p>
+        <p><strong>Kayıt Tarihi:</strong> <span id="user-registered-at">Yükleniyor...</span></p>
+        </div>
+
+      <div id="addresses-tab" class="tab-content">
+        <h2>Adreslerim</h2>
+        <button id="add-address-button" class="primary-button">Yeni Adres Ekle</button>
+        <div id="addresses-list">
+          <p>Adresler yükleniyor...</p>
+        </div>
+      </div>
+
+      <div id="orders-tab" class="tab-content">
+        <h2>Siparişlerim</h2>
+        <div id="orders-list">
+          <p>Siparişler yükleniyor...</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="addressModal" class="modal">
+      <div class="modal-content">
+        <span class="close-button" id="closeAddressModal">&times;</span>
+        <h2 id="address-modal-title">Yeni Adres Ekle</h2>
+        <div id="modal-address-notification" class="notification" style="display: none;"></div>
+        <form id="addressForm">
+          <input type="hidden" id="addressId" /> <label for="addressTitle">Adres Başlığı (Ev, İş vb.)</label>
+          <input type="text" id="addressTitle" placeholder="Ev, İş, Ofis" maxlength="50" />
+
+          <label for="addressFullName">Ad Soyad *</label>
+          <input type="text" id="addressFullName" required placeholder="Teslim alacak kişinin adı soyadı" maxlength="100" />
+
+          <label for="addressPhone">Telefon Numarası *</label>
+          <input type="tel" id="addressPhone" required placeholder="örn: 5XX YYY ZZ TT" maxlength="15" />
+
+          <label for="addressCountry">Ülke *</label>
+          <input type="text" id="addressCountry" required value="Türkiye" readonly />
+
+          <label for="addressCity">Şehir *</label>
+          <input type="text" id="addressCity" required placeholder="Şehir" maxlength="50" />
+
+          <label for="addressDistrict">İlçe</label>
+          <input type="text" id="addressDistrict" placeholder="İlçe" maxlength="50" />
+
+          <label for="addressNeighborhood">Mahalle</label>
+          <input type="text" id="addressNeighborhood" placeholder="Mahalle" maxlength="50" />
+
+          <label for="addressLine1">Adres Satırı 1 * (Cadde, Sokak, Bina No)</label>
+          <input type="text" id="addressLine1" required placeholder="Cadde, Sokak, Bina No" maxlength="200" />
+
+          <label for="addressLine2">Adres Satırı 2 (Daire No, Kat vb.)</label>
+          <input type="text" id="addressLine2" placeholder="Daire No, Kat" maxlength="200" />
+
+          <label for="addressZipCode">Posta Kodu</label>
+          <input type="text" id="addressZipCode" placeholder="Posta Kodu" maxlength="10" />
+
+          <label class="checkbox-container">
+            <input type="checkbox" id="isDefaultAddress" />
+            <span class="checkmark"></span>
+            Varsayılan adres yap
+          </label>
+
+          <button type="submit" id="saveAddressButton" class="primary-button">Adresi Kaydet</button>
+        </form>
+      </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script src="account.js"></script> </body>
+</html>

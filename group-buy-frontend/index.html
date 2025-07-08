@@ -12,11 +12,11 @@
 <body>
   <div class="top-nav">
     <span id="welcome-message"></span>
-    <button id="login-button">Giriş Yap</button>
-    <button id="register-button">Kayıt Ol</button>
-    <button id="profile-button">Profilim</button>
-    <button id="admin-button">Admin Paneli</button>
-    <button id="logout-button">Çıkış Yap</button>
+    <a href="login.html" id="login-button" class="button">Giriş Yap</a>
+    <a href="register.html" id="register-button" class="button">Kayıt Ol</a>
+    <a href="account.html" id="account-button" class="button">Hesabım</a>
+    <a href="admin.html" id="admin-button" class="button">Admin Paneli</a>
+    <a href="#" id="logout-button" class="button">Çıkış Yap</a>
   </div>
   <div class="container">
     <div id="notification" style="display:none; padding: 10px; margin-top: 15px; border-radius: 8px; text-align: center; font-weight: bold;"></div>
@@ -44,16 +44,22 @@
       
       <div id="modal-notification" style="display:none; padding: 10px; margin-bottom: 15px; border-radius: 8px; text-align: center; font-weight: bold;"></div>
 
-      <form id="purchaseForm" novalidate> <label>Ad Soyad</label>
-        <input type="text" required placeholder="Adınızı ve Soyadınızı girin" />
-        <label>E-posta</label>
-        <input type="email" required placeholder="E-posta adresinizi girin" />
-        <label>Kart Numarası</label>
-        <input type="text" required placeholder="Kart numaranızı girin" maxlength="19" />
-        <label>Son Kullanma Tarihi (AA/YY)</label>
-        <input type="text" required placeholder="12/25" maxlength="5" />
-        <label>CVC</label>
-        <input type="text" required placeholder="CVC" maxlength="3" />
+      <form id="purchaseForm" novalidate>
+        <label for="fullName">Ad Soyad</label>
+        <input type="text" id="fullName" required placeholder="Adınızı ve Soyadınızı girin" />
+
+        <label for="userEmail">E-posta</label>
+        <input type="email" id="userEmail" required placeholder="E-posta adresinizi girin" />
+
+        <label for="cardNumber">Kart Numarası</label>
+        <input type="text" id="cardNumber" required placeholder="Kart numaranızı girin" maxlength="19" />
+
+        <label for="expiryDate">Son Kullanma Tarihi (AA/YY)</label>
+        <input type="text" id="expiryDate" required placeholder="12/25" maxlength="5" />
+
+        <label for="cvcCode">CVC</label>
+        <input type="text" id="cvcCode" required placeholder="CVC" maxlength="3" />
+
         <button type="submit">Katıl ve Öde</button>
       </form>
     </div>

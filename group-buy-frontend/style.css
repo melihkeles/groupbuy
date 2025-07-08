@@ -1,4 +1,7 @@
 /* Genel Ayarlar ve Fontlar */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
 :root {
   /* Renk Paleti */
   --primary-color: #2196F3; /* Mavi tonu, düğmeler için */
@@ -10,220 +13,41 @@
   --border-color: #e0e0e0; /* Kenarlıklar */
   --shadow-light: rgba(0, 0, 0, 0.08); /* Hafif gölge */
   --error-color: #f44336; /* Hata mesajları için kırmızı */
-  
+  --accent-color: #FFC107; /* Sarımsı turuncu, vurgu için */
+
   /* Navigasyon için özel renkler */
   --nav-primary-button: #007bff; /* Giriş Yap */
   --nav-secondary-button: #6c757d; /* Kayıt Ol */
-  --nav-profile-button: #28a745; /* Profilim */
+  --nav-account-button: #28a745; /* HESABIM BUTONU */
   --nav-admin-button: #ffc107; /* Admin Paneli */
   --nav-logout-button: #dc3545; /* Çıkış Yap */
   --nav-text-color: #343a40; /* Navigasyon metin rengi */
   --nav-background-color: #f8f9fa; /* Navigasyon arka plan rengi */
   --nav-border-color: #dee2e6; /* Navigasyon kenarlık rengi */
-  }
-  
-  body {
-  font-family: 'Roboto', sans-serif; /* Ana metin fontu */
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
   background-color: var(--background-color);
   margin: 0;
   padding: 0;
   color: var(--text-color-dark);
   line-height: 1.6;
-  }
-  
-  .container {
-  max-width: 500px;
+}
+
+/* Genel Kapsayıcı */
+.container {
+  max-width: 500px; /* campaign.html için varsayılan */
   margin: 30px auto;
   background: var(--card-background);
-  padding: 25px; /* Biraz daha padding */
+  padding: 25px;
   border-radius: 12px;
-  box-shadow: 0 4px 15px var(--shadow-light); /* Daha belirgin gölge */
-  border: 1px solid var(--border-color); /* Hafif kenarlık */
-  }
-  
-  h1 {
-  font-family: 'Montserrat', sans-serif; /* Başlık fontu */
-  font-size: 2rem; /* Daha büyük başlık */
-  margin-bottom: 20px; /* Daha fazla boşluk */
-  text-align: center;
-  color: var(--primary-color); /* Ana renk */
-  font-weight: 700; /* Kalınlık */
-  }
-  
-  .product-img {
-  width: 100%;
-  border-radius: 10px; /* Hafif yuvarlak köşeler */
-  margin-bottom: 25px; /* Daha fazla boşluk */
-  box-shadow: 0 2px 8px var(--shadow-light); /* Resme gölge */
-  }
-  
-  .info p {
-  font-size: 1rem;
-  margin: 8px 0; /* Boşlukları artır */
-  color: var(--text-color-light);
-  }
-  
-  #count-info {
-  font-size: 1.2em; /* Sayı bilgisini büyüt */
-  margin-top: 15px;
-  font-weight: bold;
-  text-align: center;
-  color: var(--text-color-dark);
-  }
-  
-  #countdown-timer {
-  font-size: 1.4em; /* Geri sayım fontunu büyüt */
-  margin-top: 15px;
-  text-align: center;
-  color: var(--primary-color); /* Ana renkte göster */
-  font-weight: 700;
-  }
-  
-  #time-left {
-  display: inline-block; /* Yan yana durması için */
-  margin-left: 5px;
-  }
-  
-  .progress-bar {
-  width: 100%;
-  background: var(--border-color);
-  border-radius: 10px;
-  overflow: hidden;
-  margin: 20px 0; /* Boşluğu artır */
-  height: 25px; /* Yüksekliği biraz artır */
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); /* İçeriden hafif gölge */
-  }
-  
-  .progress {
-  height: 100%;
-  background-color: var(--secondary-color);
-  width: 0%;
-  transition: width 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Yumuşak ve belirgin geçiş */
-  border-radius: 10px; /* Kenarları yuvarlak tut */
-  }
-  
-  #buy-button {
-  background-color: var(--primary-color);
-  color: white;
-  padding: 12px 25px; /* Daha fazla padding */
-  border: none;
-  border-radius: 8px;
-  font-size: 1.1rem; /* Font boyutunu ayarla */
-  font-weight: 700; /* Kalınlaştır */
-  width: 100%;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0, 119, 204, 0.2); /* Butona gölge */
-  transition: background-color 0.3s ease, transform 0.2s ease; /* Hover geçişleri */
-  }
-  
-  #buy-button:hover {
-  background-color: #005fa3; /* Hover rengi */
-  transform: translateY(-2px); /* Hafif yukarı kalkma efekti */
-  }
-  
-  #buy-button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
-  }
-  
-  .note {
-  text-align: center;
-  font-size: 0.9rem; /* Notu biraz küçült */
-  margin-top: 25px; /* Boşluğu artır */
-  color: var(--text-color-light);
-  font-style: italic;
-  }
-  
-  /* Modal Arka Plan */
-  .modal {
-  display: none; /* Bu satır kalacak, modalın başlangıçta gizli olmasını sağlar */
-  position: fixed;
-  z-index: 1000;
-  left: 0; top: 0;
-  width: 100%; height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  justify-content: center; /* justify-content ve align-items, modal açıldığında JavaScript tarafından ayarlanacak */
-  align-items: center; /* Çünkü display: flex; olmadan bu özellikler bir işe yaramaz */
-  backdrop-filter: blur(5px);
-  animation: fadeIn 0.3s ease-out;
-  }
-  
-  /* Modal İçeriği */
-  .modal-content {
-  background-color: var(--card-background);
-  padding: 30px; /* Daha fazla padding */
-  border-radius: 15px; /* Daha yuvarlak köşeler */
-  width: 90%;
-  max-width: 450px; /* Biraz daha geniş olabilir */
-  position: relative;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25); /* Daha belirgin gölge */
-  animation: slideIn 0.3s ease-out; /* Modal açılış animasyonu */
-  }
-  
-  .modal-content h2 {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 1.8rem;
-  margin-top: 0;
-  margin-bottom: 25px; /* Boşluk artır */
-  text-align: center;
-  color: var(--primary-color);
-  }
-  
-  .modal-content input {
-  width: calc(100% - 20px); /* Padding'i hesaba kat */
-  padding: 12px 10px; /* Daha fazla padding */
-  margin: 8px 0;
+  box-shadow: 0 4px 15px var(--shadow-light);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  font-size: 1rem;
-  box-sizing: border-box; /* Padding ve border kutu boyutuna dahil */
-  }
-  
-  .modal-content .card-row {
-  display: flex;
-  gap: 15px; /* Boşluğu artır */
-  margin-bottom: 15px;
-  }
-  .modal-content .card-row input {
-  flex: 1; /* Esnek boyutlandırma */
-  }
-  
-  .modal-content button {
-  width: 100%;
-  background-color: var(--primary-color);
-  color: white;
-  padding: 12px 25px;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin-top: 20px; /* Daha fazla boşluk */
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0, 119, 204, 0.2);
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  }
-  
-  .modal-content button:hover {
-  background-color: #005fa3;
-  transform: translateY(-2px);
-  }
-  
-  .close {
-  position: absolute;
-  top: 15px; /* Biraz aşağı */
-  right: 20px; /* Biraz içeri */
-  font-size: 28px; /* Büyüt */
-  cursor: pointer;
-  color: #999;
-  transition: color 0.2s ease;
-  }
-  .close:hover {
-  color: #666;
-  }
-  
-  .auth-container {
+}
+
+/* Kimlik Doğrulama Konteyneri (Login/Register için) */
+.auth-container {
   max-width: 400px;
   margin: 50px auto;
   background: var(--card-background);
@@ -232,23 +56,23 @@
   box-shadow: 0 4px 15px var(--shadow-light);
   border: 1px solid var(--border-color);
   text-align: center;
-  }
-  .auth-container h1 {
+}
+.auth-container h1 {
   font-size: 2rem;
   margin-bottom: 25px;
   color: var(--primary-color);
-  }
-  .auth-container label {
+}
+.auth-container label {
   display: block;
   text-align: left;
   margin-bottom: 8px;
   margin-top: 15px;
   font-weight: bold;
   color: var(--text-color-dark);
-  }
-  .auth-container input[type="text"],
-  .auth-container input[type="email"],
-  .auth-container input[type="password"] {
+}
+.auth-container input[type="text"],
+.auth-container input[type="email"],
+.auth-container input[type="password"] {
   width: calc(100% - 20px);
   padding: 12px 10px;
   margin-bottom: 15px;
@@ -256,8 +80,8 @@
   border-radius: 8px;
   font-size: 1rem;
   box-sizing: border-box;
-  }
-  .auth-container button {
+}
+.auth-container button {
   width: 100%;
   background-color: var(--primary-color);
   color: white;
@@ -270,327 +94,281 @@
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(0, 119, 204, 0.2);
   transition: background-color 0.3s ease, transform 0.2s ease;
-  }
-  .auth-container button:hover {
+}
+.auth-container button:hover {
   background-color: #005fa3;
   transform: translateY(-2px);
-  }
-  .auth-container a {
+}
+.auth-container a {
   display: block;
   margin-top: 20px;
   color: var(--primary-color);
   text-decoration: none;
-  }
-  .auth-container a:hover {
+}
+.auth-container a:hover {
   text-decoration: underline;
-  }
-  
-  /* Bildirim Mesajları */
-  .notification {
-  display: none;
-  padding: 15px; /* Daha fazla padding */
-  margin-top: 25px; /* Daha fazla boşluk */
-  border-radius: 10px; /* Daha yuvarlak köşeler */
+}
+
+/* ACCOUNT.HTML İÇİN .auth-container'ı genişletme */
+.auth-container.account-page-container {
+    max-width: 900px; /* Daha geniş alan */
+    margin: 30px auto;
+    text-align: left; /* İçerik sola hizalansın */
+}
+
+h1 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2rem;
+  margin-bottom: 20px;
+  text-align: center;
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.product-img {
+  width: 100%;
+  border-radius: 10px;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 8px var(--shadow-light);
+}
+
+.info p {
+  font-size: 1rem;
+  margin: 8px 0;
+  color: var(--text-color-light);
+}
+
+#count-info {
+  font-size: 1.2em;
+  margin-top: 15px;
   font-weight: bold;
   text-align: center;
-  transition: opacity 0.4s ease-in-out;
-  opacity: 0;
-  font-size: 1.05rem; /* Biraz büyüt */
-  }
-  
-  .notification.success {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-  }
-  
-  .notification.error {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-  }
-  
-  .notification.visible {
-  display: block;
-  opacity: 1;
-  }
-  
-  /* Modal İçi Bildirim Mesajları */
-  #modal-notification {
-  /* Başlangıçta gizli ve JavaScript ile gösterilecek */
-  display: none;
-  padding: 12px;
-  margin-bottom: 15px; /* Form ile arasında boşluk */
-  border-radius: 8px;
-  font-weight: bold;
+  color: var(--text-color-dark);
+}
+
+#countdown-timer {
+  font-size: 1.4em;
+  margin-top: 15px;
   text-align: center;
-  transition: opacity 0.3s ease-in-out;
-  opacity: 0;
-  font-size: 0.95rem; /* Biraz daha küçük olabilir */
-  }
-  
-  #modal-notification.success {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-  }
-  
-  #modal-notification.error {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-  }
-  
-  #modal-notification.visible {
-  display: block;
-  opacity: 1;
-  }
-  
-  /* Animasyonlar */
-  @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-  }
-  
-  @keyframes slideIn {
-  from { transform: translateY(-50px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-  }
-  
-  form label {
-  display: block; /* Etiketlerin kendi satırında olmasını sağlar */
-  text-align: left; /* Metni sola hizalar */
-  margin-bottom: 5px; /* Altına biraz boşluk verir */
-  color: var(--text-color-dark); /* Metin rengi */
-  font-weight: bold; /* Kalınlık */
-  }
-  
-  /* Basit Spinner Stili */
-  .spinner {
-  border: 4px solid rgba(0, 0, 0, 0.1);
-  border-top: 4px solid var(--primary-color);
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  animation: spin 1s linear infinite;
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+#time-left {
   display: inline-block;
-  vertical-align: middle;
-  margin-left: 10px;
-  }
-  
-  @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-  }
-  
-  /* Buton içindeki spinner için */
-  #purchaseForm button.loading {
-  display: flex;
+  margin-left: 5px;
+}
+
+.progress-bar {
+  width: 100%;
+  background: var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 20px 0;
+  height: 25px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.progress {
+  height: 100%;
+  background-color: var(--secondary-color);
+  width: 0%;
+  transition: width 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  border-radius: 10px;
+}
+
+#buy-button {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  width: 100%;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 119, 204, 0.2);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#buy-button:hover {
+  background-color: #005fa3;
+  transform: translateY(-2px);
+}
+
+#buy-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.note {
+  text-align: center;
+  font-size: 0.9rem;
+  margin-top: 25px;
+  color: var(--text-color-light);
+  font-style: italic;
+}
+
+/* Modal Arka Plan */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
   justify-content: center;
   align-items: center;
-  pointer-events: none; /* Tıklamayı engelle */
-  opacity: 0.8;
-  }
-  
-  /* --- Top Navigation Bar Styles (Burası eklendi/güncellendi) --- */
-  .top-nav {
-  background-color: var(--nav-background-color);
-  padding: 10px 20px;
-  display: flex;
-  justify-content: flex-end; /* Sağ hizala */
-  align-items: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  border-bottom: 1px solid var(--nav-border-color);
-  flex-wrap: wrap; /* Küçük ekranlarda sığmayan butonlar için */
-  }
-  
-  .top-nav #welcome-message {
-  margin-right: auto; /* Welcome mesajını sola iter */
-  font-weight: bold;
-  color: var(--nav-text-color);
-  padding: 8px 0; /* Butonlarla aynı hizaya gelmesi için padding */
-  }
-  
-  .top-nav button {
-  margin-left: 10px; /* Düğmeler arasında boşluk */
-  background-color: #f0f0f0; /* Varsayılan arka plan */
-  color: var(--text-color-dark); /* Varsayılan metin rengi */
-  padding: 8px 15px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 0.95rem;
-  transition: background-color 0.2s ease, transform 0.1s ease;
-  white-space: nowrap; /* Buton metninin tek satırda kalmasını sağlar */
-  }
-  
-  /* Spesifik buton renkleri */
-  .top-nav #login-button {
-  background-color: var(--nav-primary-button);
-  color: white;
-  }
-  .top-nav #login-button:hover {
-  background-color: #0056b3;
-  }
-  
-  .top-nav #register-button {
-  background-color: var(--nav-secondary-button);
-  color: white;
-  }
-  .top-nav #register-button:hover {
-  background-color: #545b62;
-  }
-  
-  .top-nav #profile-button {
-  background-color: var(--nav-profile-button);
-  color: white;
-  }
-  .top-nav #profile-button:hover {
-  background-color: #218838;
-  }
-  
-  .top-nav #admin-button {
-  background-color: var(--nav-admin-button);
-  color: black;
-  }
-  .top-nav #admin-button:hover {
-  background-color: #e0a800;
-  }
-  
-  .top-nav #logout-button {
-  background-color: var(--nav-logout-button);
-  color: white;
-  }
-  .top-nav #logout-button:hover {
-  background-color: #c82333;
-  }
-  
-  /* Küçük ekranlar için top-nav responsive düzenleme */
-  @media (max-width: 768px) {
-  .top-nav {
-  flex-direction: column; /* Düğmeleri alt alta sırala */
-  align-items: flex-start; /* Sola hizala */
-  padding: 10px;
-  }
-  .top-nav #welcome-message {
-  margin-right: 0;
-  margin-bottom: 10px;
-  width: 100%;
+  backdrop-filter: blur(5px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Modal İçeriği */
+.modal-content {
+  background-color: var(--card-background);
+  padding: 30px;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 450px; /* purchaseModal için */
+  position: relative;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  animation: slideIn 0.3s ease-out;
+}
+/* ADRES MODALI İÇİN ÖZEL GENİŞLİK VE AYARLAR */
+#addressModal .modal-content {
+    max-width: 600px; /* Adres modalı daha geniş */
+    padding: 25px; /* Biraz daha az padding, daha iyi sığması için */
+    border-radius: 10px;
+    box-sizing: border-box; /* Padding ve border kutu boyutuna dahil */
+    max-height: 90vh; /* Ekran yüksekliğinin maksimum %90'ı */
+    overflow-y: auto; /* İçerik taşarsa dikey kaydırma çubuğu göster */
+    /* Opsiyonel: Daha iyi dikey ortalama için */
+    /* top: 50%;
+    left: 50%;
+    transform: translate(-100%, -50%); */
+}
+
+
+.modal-content h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.8rem;
+  margin-top: 0;
+  margin-bottom: 25px;
   text-align: center;
-  }
-  .top-nav button {
-  margin-left: 0;
-  margin-top: 5px; /* Düğmeler arasında boşluk */
-  width: 100%; /* Tam genişlikte yap */
-  }
-  }
-
-  /* --- Yeni Admin Panel ve Profil Stilleri --- */
-
-/* Tablo Stilleri (Admin ve Profil için) */
-.table { /* Mevcut .table sınıfını kullanıyoruz */
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
+  color: var(--primary-color);
+}
+/* Adres modalı başlığı için */
+#addressModal .modal-content h2 {
+    font-size: 1.6rem;
+    margin-bottom: 20px;
 }
 
-.table th, .table td { /* Mevcut .table th, td kullanıyoruz */
-  border: 1px solid var(--border-color); /* Kendi değişkeninizi kullanın */
-  padding: 8px;
-  text-align: left;
-}
 
-.table th { /* Mevcut .table th kullanıyoruz */
-  background-color: #f2f2f2; /* Gri başlık */
-  font-weight: bold;
-  color: var(--text-color-dark);
-}
-
-.table tbody tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
-
-/* Delete Button Stil (Admin Paneli için) */
-.delete-btn {
-  background-color: var(--error-color); /* Kırmızı */
-  color: white;
-  padding: 6px 10px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9em;
-  transition: background-color 0.2s ease;
-}
-
-.delete-btn:hover {
-  background-color: #d32f2f; /* Koyu kırmızı */
-}
-
-/* Profil Bilgileri Kart Stili */
-.card { /* Mevcut .card sınıfını kullanıyoruz */
-  background: var(--card-background);
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px var(--shadow-light);
-  margin-bottom: 20px;
+.modal-content input,
+.modal-content select,
+.modal-content textarea { /* Tüm input tiplerini kapsa */
+  width: 100%; /* calc'ten 100% yaptık, padding'i kendisi yönetsin */
+  padding: 10px 12px; /* Dikeyde 10, yatayda 12 padding */
+  margin: 8px 0;
   border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 1rem;
+  box-sizing: border-box; /* Padding ve border kutu boyutuna dahil */
 }
 
-/* Profil Bilgileri P etiketleri için */
-#user-info p, .participation-item p { /* .participation-item ekledik */
-  margin: 5px 0;
-  line-height: 1.6;
+.modal-content form label {
+    display: block;
+    margin-bottom: 5px; /* Etiket ile input arası boşluk */
+    font-weight: bold;
+    color: var(--text-color-dark);
 }
 
-#user-info strong, .participation-item strong { /* .participation-item ekledik */
-  color: var(--text-color-dark);
-  display: inline-block;
-  min-width: 120px; /* Label'ların hizalı durması için */
+.modal-content form input[readonly] {
+    background-color: #e9ecef;
+    cursor: not-allowed;
 }
 
-/* Katılım Öğeleri Stili (Profil sayfası) */
-.participation-item { /* Yeni sınıf */
-  background-color: #f9f9f9;
-  border: 1px solid #eee;
-  padding: 15px;
-  margin-bottom: 10px;
-  border-radius: 5px;
+.modal-content .card-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+.modal-content .card-row input {
+  flex: 1;
 }
 
-/* Ortak Spinner Stili */
-/* Zaten var olan spinner stilini güncelleyelim veya yukarıdaki kod bloğundan buraya taşıyalım.
- HTML içinde display: none; ile başlayacak. */
-/* Eğer zaten varsa bu kısmı atlayın */
-.spinner {
-  border: 4px solid rgba(0, 0, 0, 0.1);
-  border-top: 4px solid var(--primary-color);
-  border-radius: 50%;
-  width: 36px; /* Biraz büyütüldü */
-  height: 36px; /* Biraz büyütüldü */
-  animation: spin 1s linear infinite;
-  margin: 20px auto; /* Sayfada ortalamak için */
-  display: block; /* Başlangıçta gizli olsa da, görünürken blok element gibi davransın */
+.modal-content button {
+  width: 100%;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-top: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 119, 204, 0.2);
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.modal-content button:hover {
+  background-color: #005fa3;
+  transform: translateY(-2px);
 }
 
-/* Ortak Bildirim Mesajı Stili */
-/* Bu da zaten var olan .notification stilini güncelleyelim.
- HTML içinde display: none; ile başlayacak. */
-/* Eğer zaten varsa bu kısmı atlayın */
+.close {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 28px;
+  cursor: pointer;
+  color: #999;
+  transition: color 0.2s ease;
+}
+.close:hover {
+  color: #666;
+}
+.close-button { /* addressModal'daki kapatma butonu için */
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    cursor: pointer;
+}
+.close-button:hover,
+.close-button:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+
+/* --- Bildirim Mesajları --- */
 .notification {
   display: none;
   padding: 15px;
-  margin: 20px auto; /* Ortalamak için */
+  margin-top: 25px;
   border-radius: 10px;
   font-weight: bold;
   text-align: center;
+  transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
   opacity: 0;
-  transition: opacity 0.4s ease-in-out, background-color 0.2s ease, color 0.2s ease, border 0.2s ease;
-  max-width: 600px; /* Genişlik sınırlaması */
+  transform: translateY(-20px);
+  font-size: 1.05rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.auth-container .notification {
+  padding: 10px;
+  margin-top: 15px;
+  font-size: 0.95rem;
 }
 
 .notification.success {
@@ -604,35 +382,669 @@
   color: #721c24;
   border: 1px solid #f5c6cb;
 }
+.notification.warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
 
 .notification.visible {
   display: block;
   opacity: 1;
+  transform: translateY(0);
 }
 
-/* Eğer Bootstrap kullanmıyorsanız, .container için de genel bir stil */
-.container {
-max-width: 800px; /* Genişliği biraz artırıldı */
-margin: 30px auto;
-padding: 25px;
+/* Modal İçi Bildirim Mesajları */
+#modal-notification, #modal-address-notification { /* Her iki modal bildirimi için de geçerli */
+  display: none;
+  padding: 12px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  font-weight: bold;
+  text-align: center;
+  transition: opacity 0.3s ease-in-out;
+  opacity: 0;
+  font-size: 0.95rem;
 }
 
-/* Bootstrap'a özgü sınıfları kaldırdığımız için bazı temel tablo stillerini tekrar ekleyelim */
-.table-responsive { /* Table'ı sarmalayan div için */
-  overflow-x: auto; /* Küçük ekranlarda yatay kaydırma çubuğu */
+#modal-notification.success, #modal-address-notification.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
 }
 
-/* Butonlar için genel stil, top-nav'ın dışındaki button elementlerini de kapsayacak */
-.button {
-  background-color: #f0f0f0; /* Varsayılan arka plan */
-  color: var(--text-color-dark); /* Varsayılan metin rengi */
+#modal-notification.error, #modal-address-notification.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+#modal-notification.visible, #modal-address-notification.visible {
+  display: block;
+  opacity: 1;
+}
+
+/* Animasyonlar */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+form label {
+  display: block;
+  text-align: left;
+  margin-bottom: 5px;
+  color: var(--text-color-dark);
+  font-weight: bold;
+}
+
+/* --- Spinner Stilleri --- */
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-top: 4px solid var(--primary-color);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 10px;
+}
+#purchaseForm button.loading,
+.auth-container button.loading,
+#addressForm button.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* --- Top Navigation Bar Styles --- */
+.top-nav {
+  background-color: var(--nav-background-color);
+  padding: 10px 20px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-bottom: 1px solid var(--nav-border-color);
+  flex-wrap: wrap;
+}
+
+.top-nav #welcome-message {
+  margin-right: auto;
+  font-weight: bold;
+  color: var(--nav-text-color);
+  padding: 8px 0;
+}
+
+.top-nav a.button {
+    margin-left: 10px;
+    background-color: #f0f0f0;
+    color: var(--text-color-dark);
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    white-space: nowrap;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+/* Spesifik buton renkleri */
+.top-nav #login-button {
+  background-color: var(--nav-primary-button);
+  color: white;
+}
+.top-nav #login-button:hover {
+  background-color: #0056b3;
+}
+
+.top-nav #register-button {
+  background-color: var(--nav-secondary-button);
+  color: white;
+}
+.top-nav #register-button:hover {
+  background-color: #545b62;
+}
+
+.top-nav #account-button {
+  background-color: var(--nav-account-button);
+  color: white;
+}
+.top-nav #account-button:hover {
+  background-color: #218838;
+}
+
+.top-nav #admin-button {
+  background-color: var(--nav-admin-button);
+  color: black;
+}
+.top-nav #admin-button:hover {
+  background-color: #e0a800;
+}
+
+.top-nav #logout-button {
+  background-color: var(--nav-logout-button);
+  color: white;
+}
+.top-nav #logout-button:hover {
+  background-color: #c82333;
+}
+
+/* Küçük ekranlar için top-nav responsive düzenleme */
+@media (max-width: 768px) {
+  .top-nav {
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 10px;
+  }
+  .top-nav #welcome-message {
+  margin-right: 0;
+  margin-bottom: 10px;
+  width: 100%;
+  text-align: center;
+  }
+  .top-nav a.button {
+  margin-left: 0;
+  margin-top: 5px;
+  width: 100%;
+  }
+}
+
+/* Küçük ekranlar için genel responsive düzenleme */
+@media (max-width: 600px) {
+  .container {
+    margin: 20px 15px;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: none;
+  }
+
+  h1 {
+    font-size: 1.7rem;
+    margin-bottom: 15px;
+  }
+
+  .auth-container {
+    margin: 30px 15px;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: none;
+  }
+
+  .modal-content {
+    width: 95%;
+    padding: 20px;
+    border-radius: 10px;
+  }
+
+  .modal-content h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+
+  .modal-content button,
+  .auth-container button {
+    padding: 10px 20px;
+    font-size: 1rem;
+  }
+
+  .notification {
+    padding: 10px;
+    margin-top: 15px;
+    font-size: 0.9rem;
+    border-radius: 8px;
+  }
+
+  #modal-notification, #modal-address-notification {
+    padding: 10px;
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+  }
+}
+
+/* --- Admin Panel ve Profil Stilleri --- */
+
+/* Tablo Stilleri (Admin ve Profil için) */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.table th, .table td {
+  border: 1px solid var(--border-color);
+  padding: 8px;
+  text-align: left;
+}
+
+.table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+  color: var(--text-color-dark);
+}
+
+.table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+/* Delete Button Stil (Admin Paneli için) */
+.delete-btn {
+  background-color: var(--error-color);
+  color: white;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background-color 0.2s ease;
+}
+
+.delete-btn:hover {
+  background-color: #d32f2f;
+}
+
+/* Genel Buton Stili (top-nav'ın dışındaki butonlar için) */
+.button { /* Bu genel buton sınıfı, özel buton sınıfları tarafından ezilebilir */
+  background-color: #f0f0f0;
+  color: var(--text-color-dark);
   padding: 8px 15px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-size: 0.95rem;
   transition: background-color 0.2s ease, transform 0.1s ease;
-  text-decoration: none; /* A etiketleri için */
-  display: inline-block; /* A etiketlerinin buton gibi davranması için */
+  text-decoration: none;
+  display: inline-block;
   text-align: center;
+}
+.primary-button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    width: 100%; /* Genişlik ayarı, duruma göre esneyebilir */
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 119, 204, 0.2);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+.primary-button:hover {
+    background-color: #005fa3;
+    transform: translateY(-2px);
+}
+.primary-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+
+/* --- Account Page Specific Styles --- */
+
+/* Tabs (Sekmeler) */
+.tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 5px;
+}
+
+.tab-button {
+    background-color: #f0f0f0;
+    border: none;
+    padding: 12px 25px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #555;
+    border-radius: 6px 6px 0 0;
+    transition: background-color 0.3s, color 0.3s;
+    margin: 0 5px;
+    white-space: nowrap;
+}
+
+.tab-button:hover {
+    background-color: #e0e0e0;
+}
+
+.tab-button.active {
+    background-color: var(--primary-color);
+    color: #fff;
+    border-bottom: 3px solid var(--accent-color);
+    transform: translateY(2px);
+}
+
+.tab-content {
+    display: none; /* Varsayılan olarak gizli */
+    padding: 20px 0;
+    /* border-top: 1px solid #eee; Bu artık gereksiz, tabs zaten border-bottom veriyor */
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.tab-content h2 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--border-color); /* Sarıdan genel kenarlık rengine çevrildi */
+    padding-bottom: 10px;
+    text-align: left; /* Başlıklar sola hizalı olsun */
+}
+
+/* Kullanıcı bilgileri için */
+#profile-tab p {
+    margin-bottom: 10px;
+    line-height: 1.6;
+    display: flex; /* Etiket ve değer yan yana hizalanacak */
+    align-items: baseline;
+}
+#profile-tab p strong {
+    color: var(--text-color-dark);
+    min-width: 120px; /* Label'ların hizalı durması için */
+    display: inline-block;
+    flex-shrink: 0; /* Küçülmesini engelle */
+    margin-right: 10px; /* Değerden ayır */
+}
+
+/* Yeni Adres Ekle butonu için kapsayıcı */
+.account-actions {
+    margin-bottom: 20px;
+    text-align: right; /* Butonu sağa hizala */
+}
+.account-actions .primary-button {
+    width: auto; /* Kapsayıcı genişliğinde olmasın, içeriğine göre genişlesin */
+    padding: 10px 20px;
+    font-size: 1rem;
+    margin-top: 0;
+}
+
+
+/* Adres Listesi Stilleri */
+#addresses-list {
+    margin-top: 20px;
+}
+
+.address-item {
+    background-color: #fdfdfd;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    position: relative;
+}
+
+.address-item.default-address {
+    border-left: 5px solid var(--accent-color);
+    background-color: #f0f8ff;
+}
+
+.address-info {
+    flex-grow: 1;
+    margin-right: 20px;
+}
+
+.address-info p {
+    margin: 3px 0;
+    font-size: 0.95rem;
+    color: #444;
+}
+
+.address-info strong {
+    color: var(--primary-color);
+}
+
+.address-item .badge {
+    background-color: var(--accent-color);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 5px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    margin-left: 10px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.address-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+    margin-top: 10px;
+}
+
+.address-actions .button {
+    padding: 8px 15px;
+    font-size: 0.85rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.address-actions .edit-button {
+    background-color: #007bff;
+    color: white;
+    border: 1px solid #007bff;
+}
+
+.address-actions .edit-button:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+.address-actions .delete-button {
+    background-color: #dc3545;
+    color: white;
+    border: 1px solid #dc3545;
+}
+
+.address-actions .delete-button:hover {
+  background-color: #c82333;
+  border-color: #c82333;
+}
+
+/* Sipariş Listesi Stilleri */
+.order-item {
+    background-color: #fdfdfd;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.order-item p {
+    margin: 5px 0;
+    line-height: 1.6;
+}
+
+.order-item p strong {
+    color: var(--text-color-dark);
+    min-width: 150px; /* Etiketlerin hizalanması için */
+    display: inline-block;
+}
+
+
+/* Checkbox için stiller (modal içinde) */
+.checkbox-container {
+    display: flex; /* Checkmark ve metni yan yana hizala */
+    align-items: center; /* Dikeyde ortala */
+    position: relative;
+    padding-left: 35px; /* Checkmark için yer aç */
+    margin-top: 15px; /* Input ile checkbox arası boşluk */
+    margin-bottom: 20px; /* Sonraki elemanla boşluk */
+    cursor: pointer;
+    font-size: 1rem;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.checkbox-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 25px;
+    width: 25px;
+    background-color: #eee;
+    border-radius: 5px;
+    margin-top: 0; /* flex ile dikey hizalandığı için */
+}
+
+.checkbox-container:hover input ~ .checkmark {
+    background-color: #ccc;
+}
+
+.checkbox-container input:checked ~ .checkmark {
+    background-color: var(--primary-color);
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.checkmark:after {
+    left: 9px;
+    top: 5px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    -webkit-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+
+/* Küçük ekranlar için responsive düzenleme (account.html'e özel) */
+@media (max-width: 768px) {
+    .tabs {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .tab-button {
+        margin: 5px 0;
+        border-radius: 5px;
+    }
+    .tab-button.active {
+        border-bottom: none;
+        border-left: 5px solid var(--accent-color);
+        transform: none;
+    }
+    .account-actions {
+        text-align: center; /* Küçük ekranlarda butonu ortala */
+    }
+    .account-actions .primary-button {
+        width: 100%; /* Tam genişlikte yap */
+    }
+    .address-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .address-actions {
+        width: 100%;
+        justify-content: flex-end;
+        margin-top: 15px;
+    }
+    .address-actions .button {
+        flex-grow: 1;
+    }
+    .address-info {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+    .address-item .badge {
+        margin-left: 0;
+        margin-top: 5px;
+    }
+    #addressModal .modal-content {
+        width: 95%;
+        margin: 10px auto;
+        padding: 15px; /* Küçük ekranlarda modal padding'ini daha da azalt */
+    }
+    #addressModal .modal-content h2 {
+        font-size: 1.4rem; /* Modal başlığını küçült */
+        margin-bottom: 15px;
+    }
+    /* Inputların küçük ekranlarda daha iyi görünmesi */
+    .modal-content input,
+    .modal-content select,
+    .modal-content textarea {
+        padding: 8px 10px; /* Daha az padding */
+        font-size: 0.95rem; /* Fontu küçült */
+    }
+    .checkbox-container {
+        padding-left: 30px; /* Checkbox için padding'i azalt */
+    }
+    .checkmark {
+        height: 20px; /* Checkbox boyutunu küçült */
+        width: 20px;
+    }
+    .checkmark:after {
+        left: 7px; /* Tikin konumunu ayarla */
+        top: 3px;
+        width: 4px;
+        height: 8px;
+    }
+}
+/* Tüm sekme içeriklerini varsayılan olarak gizle */
+.tab-content {
+  display: none;
+  padding: 20px 0; /* İçerik için biraz boşluk */
+  /* Gerekirse, modalın üstündeki öğelerle çakışmaması için z-index ayarı yapılabilir */
+  position: relative; /* Bazı durumlarda z-index için gereklidir */
+  z-index: 1; /* Diğer öğelerin altında kalmasını engellemek için */
+}
+
+/* Sadece aktif olan sekme içeriğini göster */
+.tab-content.active {
+  display: block;
+}
+
+/* Diğer öğelerin z-index'ini kontrol edin */
+/* Örneğin, navbar'ın z-index'i yüksek olabilir, modalın da yüksek olmalı */
+.modal-overlay { /* Modal'ın arka planı */
+  z-index: 1000;
+}
+
+.modal-content { /* Modal'ın kendisi */
+  z-index: 1001;
 }

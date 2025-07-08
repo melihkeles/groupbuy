@@ -179,11 +179,11 @@ document.getElementById("purchaseForm").addEventListener("submit", async functio
       modalNotificationDiv.style.display = 'none';
   }
 
-  const name = form[0].value.trim();
-  const email = form[1].value.trim();
-  const card = form[2].value.trim().replace(/\s/g, '');
-  const exp = form[3].value.trim();
-  const cvc = form[4].value.trim();
+  const name = document.getElementById('fullName').value.trim();
+  const email = document.getElementById('userEmail').value.trim();
+  const card = document.getElementById('cardNumber').value.trim().replace(/\s/g, '');
+  const exp = document.getElementById('expiryDate').value.trim();
+  const cvc = document.getElementById('cvcCode').value.trim();
 
   // Frontend Doğrulamaları (Aynı kaldı)
   if (!name || !email || !card || !exp || !cvc) {
