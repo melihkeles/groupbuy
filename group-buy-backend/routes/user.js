@@ -28,7 +28,7 @@ router.post('/register', async (req, res) => {
       },
     });
 
-    const token = generateToken(user.id, user.role, user.name);
+    const token = generateToken(user.id, user.role, user.name, user.email);
     res.status(201).json({ message: 'Kullanıcı başarıyla kaydedildi.', token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
   } catch (error) {
     console.error('Kayıt hatası:', error);
@@ -56,7 +56,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Geçersiz e-posta veya parola.' });
     }
 
-    const token = generateToken(user.id, user.role);
+    const token = generateToken(user.id, user.role, user.name, user.email);
     res.status(200).json({ message: 'Giriş başarılı.', token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
   } catch (error) {
     console.error('Giriş hatası:', error);

@@ -16,9 +16,11 @@ const comparePassword = async (password, hashedPassword) => {
 
 // JWT oluşturma fonksiyonu
 // userId, role ve kullanıcı adını (name/username) payload'a ekle
-const generateToken = (userId, role, userName) => { // userName parametresini ekle
-  return jwt.sign({ userId, role, name: userName }, JWT_SECRET, { expiresIn: '1h' });
+// utils/auth.js
+const generateToken = (userId, role, name, email) => {
+  return jwt.sign({ userId, role, name, email }, JWT_SECRET, { expiresIn: '1h' });
 };
+
 
 // JWT doğrulama (middleware olarak kullanılacak)
 const verifyToken = (req, res, next) => {

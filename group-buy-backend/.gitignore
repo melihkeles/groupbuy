@@ -1,5 +1,33 @@
-node_modules
-# Keep environment variables out of version control
-.env
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-/generated/prisma
+# Env file
+.env
+.env.*     # Örn: .env.production, .env.local
+
+# Prisma
+/prisma/.DS_Store
+/generated/
+/generated/prisma/  # (Eğer generate sonrası bu klasöre yazıyorsan)
+
+# Build outputs (örnek olarak dist/ ya da frontend/build/ gibi klasörleri ekleyebilirsin)
+dist/
+build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VSCode editor config
+.vscode/
+
+# Logs
+logs/
+*.log
+
+# Optional: macOS / Linux swap ve system dosyaları
+*.swp
+*.swo

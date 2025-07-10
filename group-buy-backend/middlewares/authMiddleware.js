@@ -14,7 +14,7 @@ const authMiddleware = (req, res, next) => {
     if (!token) {
         return res.status(401).json({ success: false, message: 'Yetkilendirme tokenı formatı geçersiz.' });
     }
-
+    
     try {
         // 2. Token'ı doğrula
         // JWT_SECRET env değişkeninden okunuyor.
