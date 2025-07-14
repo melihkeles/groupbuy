@@ -2,6 +2,8 @@
 
 // BASE_URL, getUserToken, decodeToken, showNotification, logoutUser common.js'den gelir
 
+let allProvincesAndDistricts = []; // tr-il-ilce.json verilerini tutacak
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Navigasyon durumunu kontrol et (common.js'den)
     checkLoginStatus();
@@ -28,8 +30,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const addressFullNameInput = document.getElementById('addressFullName');
     const addressPhoneInput = document.getElementById('addressPhone');
     const addressCountryInput = document.getElementById('addressCountry');
-    const addressCityInput = document.getElementById('addressCity');
-    const addressDistrictInput = document.getElementById('addressDistrict');
+    // Şehir ve İlçe select elementleri
+    const addressCitySelect = document.getElementById('addressCity'); // Burası değişti!
+    const addressDistrictSelect = document.getElementById('addressDistrict'); // Burası değişti!
     const addressNeighborhoodInput = document.getElementById('addressNeighborhood');
     const addressLine1Input = document.getElementById('addressLine1');
     const addressLine2Input = document.getElementById('addressLine2');
@@ -135,6 +138,52 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- Adres Yönetimi ---
 
+    // İl/ilçe verilerini yükle
+    async function loadProvinceAndDistrictData() {
+        try {
+            const res = await fetch('/data/turkiye-il-ilce.json');
+            if (!res.ok) {
+                throw new Error('İl/ilçe verileri yüklenemedi.');
+            }
+            allProvincesAndDistricts = await res.json();
+
+            // İlleri doldur
+            addressCitySelect.innerHTML = '<option value="">Şehir Seçiniz</option>';
+            allProvincesAndDistricts.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city.text; // Value olarak ilin metin adını kullan
+                option.textContent = city.text;
+                addressCitySelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error("İl/İlçe verileri yüklenirken hata:", error);
+            showNotification("İl ve ilçe verileri yüklenirken bir sorun oluştu.", "error", 'modal-address-notification');
+        }
+    }
+
+    // İl seçimi değiştiğinde ilçeleri doldur
+    if (addressCitySelect) {
+        addressCitySelect.addEventListener('change', () => {
+            const selectedCityName = addressCitySelect.value;
+            addressDistrictSelect.innerHTML = '<option value="">İlçe Seçiniz</option>'; // İlçeleri temizle
+            addressDistrictSelect.disabled = true;
+
+            if (selectedCityName) {
+                const selectedCity = allProvincesAndDistricts.find(city => city.text === selectedCityName);
+                if (selectedCity && selectedCity.districts.length > 0) {
+                    selectedCity.districts.forEach(district => {
+                        const option = document.createElement('option');
+                        option.value = district.text; // Value olarak ilçenin metin adını kullan
+                        option.textContent = district.text;
+                        addressDistrictSelect.appendChild(option);
+                    });
+                    addressDistrictSelect.disabled = false;
+                }
+            }
+        });
+    }
+
+
     // Adresleri çek ve listele
     async function fetchUserAddresses() {
         const token = getUserToken();
@@ -164,7 +213,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 <p><strong>Başlık:</strong> ${address.title || 'Belirtilmemiş'} ${address.isDefault ? '<span class="badge">Varsayılan</span>' : ''}</p>
                                 <p><strong>Ad Soyad:</strong> ${address.fullName}</p>
                                 <p><strong>Telefon:</strong> ${address.phone}</p>
-                                <p><strong>Adres:</strong> ${address.addressLine1} ${address.addressLine2 ? ', ' + address.addressLine2 : ''}, ${address.neighborhood ? address.neighborhood + ' Mah., ' : ''}${address.district ? address.district + '/' : ''}${address.city}, ${address.country} ${address.zipCode ? ', ' + address.zipCode : ''}</p>
+                                <p><strong>Adres:</strong> ${address.addressLine1} ${address.addressLine2 ? ', ' + address.addressLine2 : ''}, ${address.neighborhood ? address.neighborhood + ' Mah., ' : ''}${address.district ? address.district + ' / ' : ''}${address.city}, ${address.country} ${address.zipCode ? ', Posta Kodu: ' + address.zipCode : ''}</p>
                             </div>
                             <div class="address-actions">
                                 <button class="button edit-button" data-id="${address.id}">Düzenle</button>
@@ -209,10 +258,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Adres modalını aç
-    function openAddressModal(address = null) {
+    async function openAddressModal(address = null) {
         addressForm.reset(); // Formu sıfırla
         modalAddressNotificationDiv.style.display = 'none'; // Bildirimi gizle
         modalAddressNotificationDiv.classList.remove('visible', 'success', 'error');
+
+        // İl/ilçe select kutularını varsayılan durumlarına getir
+        addressCitySelect.innerHTML = '<option value="">Şehir Seçiniz</option>';
+        addressDistrictSelect.innerHTML = '<option value="">İlçe Seçiniz</option>';
+        addressDistrictSelect.disabled = true;
+
+        // İl/ilçe verilerini yükle (modal her açıldığında çağırabiliriz veya bir kere yüklenebilir)
+        if (allProvincesAndDistricts.length === 0) {
+            await loadProvinceAndDistrictData(); // Veri daha önce yüklenmediyse yükle
+        } else {
+            // Zaten yüklüyse, sadece il seçeneklerini doldur
+            allProvincesAndDistricts.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city.text;
+                option.textContent = city.text;
+                addressCitySelect.appendChild(option);
+            });
+        }
+
 
         if (address) {
             addressModalTitle.textContent = 'Adresi Düzenle';
@@ -221,8 +289,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             addressFullNameInput.value = address.fullName;
             addressPhoneInput.value = address.phone;
             addressCountryInput.value = address.country;
-            addressCityInput.value = address.city;
-            addressDistrictInput.value = address.district || '';
+
+            // İl ve ilçeyi doldurma
+            addressCitySelect.value = address.city;
+            // İl seçimi değiştiğinde ilçelerin dolması için change event'ini tetikle
+            // Bu, seçilen ilin ilçelerini dolduracak
+            addressCitySelect.dispatchEvent(new Event('change'));
+
+            // Ardından ilçe seçimi için küçük bir gecikme kullanmak gerekebilir
+            // çünkü ilçeler asenkron olarak yüklenecektir.
+            setTimeout(() => {
+                addressDistrictSelect.value = address.district || '';
+                addressDistrictSelect.disabled = !addressCitySelect.value; // İl seçili değilse ilçe de devre dışı kalsın
+            }, 100); // Küçük bir gecikme ile ilçe seçimini ayarla
+
             addressNeighborhoodInput.value = address.neighborhood || '';
             addressLine1Input.value = address.addressLine1;
             addressLine2Input.value = address.addressLine2 || '';
@@ -261,8 +341,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             fullName: addressFullNameInput.value.trim(),
             phone: addressPhoneInput.value.trim(),
             country: addressCountryInput.value.trim(),
-            city: addressCityInput.value.trim(),
-            district: addressDistrictInput.value.trim() || null,
+            // Burada select kutularından metin değerlerini alıyoruz
+            city: addressCitySelect.value.trim(),
+            district: addressDistrictSelect.value.trim() || null,
             neighborhood: addressNeighborhoodInput.value.trim() || null,
             addressLine1: addressLine1Input.value.trim(),
             addressLine2: addressLine2Input.value.trim() || null,
@@ -271,7 +352,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         // Form doğrulama
-        if (!addressData.fullName || !addressData.phone || !addressData.country || !addressData.city || !addressData.addressLine1) {
+        if (!addressData.fullName || !addressData.phone || !addressData.country || !addressData.city || !addressData.district || !addressData.addressLine1) {
             showNotification("Lütfen * ile işaretlenmiş tüm zorunlu alanları doldurun.", "error", 'modal-address-notification');
             saveAddressButton.disabled = false;
             saveAddressButton.innerHTML = 'Adresi Kaydet';
@@ -355,7 +436,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         ordersListDiv.innerHTML = '<p>Siparişler yükleniyor...</p>';
         try {
-            const participationsRes = await fetch(`${BASE_URL}/users/me/participations`, {
+            const participationsRes = await fetch(`${BASE_URL}/orders/me`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const participationsData = await participationsRes.json();
@@ -370,9 +451,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                         participationItem.classList.add('participation-item');
                         participationItem.innerHTML = `
                             <p><strong>Sipariş Kodu:</strong> ${p.id.substring(0,8)}...</p>
-                            <p><strong>Kampanya Adı:</strong> Grup Satın Alma Kampanyası</p>
+                            <p><strong>Kampanya Adı:</strong> ${p.campaign?.product?.name || 'Bilinmiyor'}</p>
                             <p><strong>Katılım Tarihi:</strong> ${new Date(p.createdAt).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
                             <p><strong>E-posta:</strong> ${p.email}</p>
+                            <p><strong>Durum:</strong> ${p.status}</p>
                         `;
                         ordersListDiv.appendChild(participationItem);
                     });
@@ -393,6 +475,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Sayfa yüklendiğinde başlat
     initializeAccountPage();
+    loadProvinceAndDistrictData(); // İl/ilçe verilerini baştan yükle
 
     // Opsiyonel: Telefon numarası formatlama
     addressPhoneInput.addEventListener('input', (e) => {

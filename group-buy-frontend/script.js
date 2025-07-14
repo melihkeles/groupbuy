@@ -1,340 +1,445 @@
 // group-buy-frontend/script.js
 
-// BASE_URL common.js'den geliyor, burada tekrar tanımlamaya gerek yok.
-// const BASE_URL = 'http://localhost:5001/api'; // Kaldırıldı
+// BASE_URL common.js'den geliyor
+let countdownIntervals = {};
 
-const TARGET_COUNT = 500;
-let currentCount = 0;
-let campaignEndTime;
-
-// --- Kullanıcı Bilgisi ve Token Yönetimi ---
-// Bu fonksiyonlar common.js'e taşındı. Burada tekrar tanımlanmayacak.
-// function getUserToken() { ... }
-// function removeUserToken() { ... }
-// function decodeToken(token) { ... }
-// function updateNavigation() { ... }
-
-// --- Ortak Yardımcı Fonksiyonlar ---
-
-// Progress bar ve sayaç güncelleme fonksiyonu (Aynı kaldı, çünkü bu kampanya sayfasına özel)
-function updateProgressBar() {
-  const percent = (currentCount / TARGET_COUNT) * 100;
-  document.getElementById("progress").style.width = `${percent}%`;
-  document.getElementById("current-count").textContent = currentCount;
+// --- Yardımcı Fonksiyonlar (Değişmedi) ---
+function updateProgressBar(campaignElement, current, target) {
+    const percent = (current / target) * 100;
+    campaignElement.querySelector(".progress").style.width = `${percent}%`;
+    campaignElement.querySelector(".current-count").textContent = current;
 }
 
-// Geri sayım mantığı (Aynı kaldı, kampanya sayfasına özel)
-function updateCountdown() {
-  if (!campaignEndTime) return;
+function updateCountdown(campaignElement, endDate) {
+    const now = new Date();
+    const endTime = new Date(endDate);
+    const diff = endTime.getTime() - now.getTime(); // Kalan süre milisaniye cinsinden
 
-  const now = new Date();
-  const diff = campaignEndTime.getTime() - now.getTime();
+    const timeLeftSpan = campaignElement.querySelector(".time-left");
+    const buyButton = campaignElement.querySelector(".buy-button");
 
-  const timeLeftSpan = document.getElementById("time-left");
-  const buyButton = document.getElementById("buy-button");
-
-  if (diff <= 0) {
-    timeLeftSpan.innerText = "Süre doldu!";
-    if (buyButton) {
-      buyButton.disabled = true;
-      buyButton.innerText = "Kampanya Süresi Doldu";
+    if (diff <= 0) {
+        timeLeftSpan.innerText = "Süre doldu!";
+        if (buyButton) {
+            buyButton.disabled = true;
+            buyButton.innerText = "Kampanya Süresi Doldu";
+        }
+        return false; // Sürenin dolduğunu bildir
     }
-    if (window.countdownInterval) {
-        clearInterval(window.countdownInterval);
-    }
-    return;
-  }
 
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-  timeLeftSpan.innerText =
-    `${hours.toString().padStart(2,"0")} sa ${minutes.toString().padStart(2,"0")} dk ${seconds.toString().padStart(2,"0")} sn`;
+    timeLeftSpan.innerText =
+        `${hours.toString().padStart(2,"0")} sa ${minutes.toString().padStart(2,"0")} dk ${seconds.toString().padStart(2,"0")} sn`;
+    return true; // Sürenin devam ettiğini bildir
 }
 
 
 // --- API İstekleri ve Veri Yönetimi ---
 
-// Backend'den katılımcı sayısını ve kampanya bitiş tarihini çeker (Aynı kaldı)
-async function fetchCurrentCountAndCampaignStatus() {
-  try {
-    const res = await fetch(`${BASE_URL}/count`); // BASE_URL common.js'den kullanılacak
-    const data = await res.json();
-    if (data.success) {
-      currentCount = data.count;
-      updateProgressBar();
+async function fetchAndDisplayCampaigns() {
+    const activeCampaignsListDiv = document.getElementById('active-campaigns-list');
+    const completedCampaignsListDiv = document.getElementById('completed-campaigns-list');
 
-      if (data.campaignDeadline) {
-          campaignEndTime = new Date(data.campaignDeadline);
-          updateCountdown();
-      }
+    if (!activeCampaignsListDiv || !completedCampaignsListDiv) return;
 
-      if (currentCount >= TARGET_COUNT) {
-        const buyButton = document.getElementById("buy-button");
-        if (buyButton) {
-            buyButton.disabled = true;
-            buyButton.innerText = "Kampanya Tamamlandı";
-        }
-        document.getElementById("time-left").innerText = "Kampanya Tamamlandı";
-        if (window.countdownInterval) {
-            clearInterval(window.countdownInterval);
-        }
-      }
-    } else {
-      console.warn('Katılımcı sayısı veya kampanya süresi alınamadı:', data.message || 'Bilinmeyen hata');
+    // İlk yüklemede "yükleniyor" mesajlarını göster
+    if (activeCampaignsListDiv.children.length === 0 || (activeCampaignsListDiv.children.length === 1 && activeCampaignsListDiv.querySelector('p')?.textContent === 'Aktif kampanyalar yükleniyor...')) {
+        activeCampaignsListDiv.innerHTML = '<p>Aktif kampanyalar yükleniyor...</p>';
     }
-  } catch (error) {
-    console.error('Veri çekilemedi:', error);
-    // showNotification fonksiyonu common.js'den geldiği için global olarak erişilebilir olmalı.
-    if (typeof showNotification === 'function') {
-        showNotification("Kampanya bilgileri yüklenirken hata oluştu. Sunucuya ulaşılamadı mı?", "error");
-    } else {
-        alert("Kampanya bilgileri yüklenirken hata oluştu. Sunucuya ulaşılamadı mı?");
+    if (completedCampaignsListDiv.children.length === 0 || (completedCampaignsListDiv.children.length === 1 && completedCampaignsListDiv.querySelector('p')?.textContent === 'Tamamlanmış kampanyalar yükleniyor...')) {
+        completedCampaignsListDiv.innerHTML = '<p>Tamamlanmış kampanyalar yükleniyor...</p>';
     }
-  }
+    
+    // Mevcut kampanyaların ID'lerini toplamak için setler
+    const existingActiveCampaignIds = new Set();
+    activeCampaignsListDiv.querySelectorAll('.campaign-card').forEach(card => {
+        existingActiveCampaignIds.add(card.dataset.campaignId);
+    });
+
+    const existingCompletedCampaignIds = new Set();
+    completedCampaignsListDiv.querySelectorAll('.campaign-card').forEach(card => {
+        existingCompletedCampaignIds.add(card.dataset.campaignId);
+    });
+
+    try {
+        // Tüm kampanyaları getir (backend'in filter olmadan hepsini döndürdüğünü varsayıyoruz)
+        const res = await fetch(`${BASE_URL}/campaigns`);
+        const allCampaignsData = await res.json();
+
+        if (!res.ok) {
+            showNotification(allCampaignsData.message || 'Kampanyalar yüklenirken hata oluştu.', 'error');
+            activeCampaignsListDiv.innerHTML = '<p>Aktif kampanyalar yüklenirken bir hata oluştu.</p>';
+            completedCampaignsListDiv.innerHTML = '<p>Tamamlanmış kampanyalar yüklenirken bir hata oluştu.</p>';
+            Object.values(countdownIntervals).forEach(clearInterval);
+            countdownIntervals = {};
+            return;
+        }
+
+        const activeCampaigns = allCampaignsData.filter(c => c.status === 'ACTIVE' && new Date(c.endDate) > new Date() && c.currentQuantity < c.targetQuantity);
+        const completedCampaigns = allCampaignsData.filter(c => c.status === 'COMPLETED' || new Date(c.endDate) <= new Date() || c.currentQuantity >= c.targetQuantity);
+
+        // --- Aktif Kampanyaları İşle ---
+        const newActiveCampaignIds = new Set();
+        if (activeCampaigns.length === 0) {
+            activeCampaignsListDiv.innerHTML = '<p>Şu anda aktif kampanya bulunmamaktadır.</p>';
+        } else {
+            // "yükleniyor..." mesajını temizle eğer varsa ve yeni kampanyalar geliyorsa
+            if (activeCampaignsListDiv.querySelector('p')?.textContent === 'Aktif kampanyalar yükleniyor...') {
+                activeCampaignsListDiv.innerHTML = '';
+            }
+            activeCampaigns.forEach(campaign => {
+                newActiveCampaignIds.add(campaign.id);
+                let campaignCard = activeCampaignsListDiv.querySelector(`[data-campaign-id="${campaign.id}"]`);
+
+                if (!campaignCard) {
+                    campaignCard = document.createElement('div');
+                    campaignCard.classList.add('campaign-card');
+                    campaignCard.dataset.campaignId = campaign.id;
+                    activeCampaignsListDiv.appendChild(campaignCard);
+                }
+                updateCampaignCard(campaignCard, campaign, false); // false: tamamlanmış değil
+            });
+        }
+        
+        // Eski aktif kampanyaları kaldır (artık aktif olmayanlar veya silinenler)
+        existingActiveCampaignIds.forEach(id => {
+            if (!newActiveCampaignIds.has(id)) {
+                const cardToRemove = activeCampaignsListDiv.querySelector(`[data-campaign-id="${id}"]`);
+                if (cardToRemove) {
+                    cardToRemove.remove();
+                }
+                if (countdownIntervals[id]) {
+                    clearInterval(countdownIntervals[id]);
+                    delete countdownIntervals[id];
+                }
+            }
+        });
+
+        // --- Tamamlanmış Kampanyaları İşle ---
+        const newCompletedCampaignIds = new Set();
+        if (completedCampaigns.length === 0) {
+            completedCampaignsListDiv.innerHTML = '<p>Henüz tamamlanmış kampanya bulunmamaktadır.</p>';
+        } else {
+             // "yükleniyor..." mesajını temizle eğer varsa ve yeni kampanyalar geliyorsa
+             if (completedCampaignsListDiv.querySelector('p')?.textContent === 'Tamamlanmış kampanyalar yükleniyor...') {
+                completedCampaignsListDiv.innerHTML = '';
+            }
+            completedCampaigns.forEach(campaign => {
+                newCompletedCampaignIds.add(campaign.id);
+                let campaignCard = completedCampaignsListDiv.querySelector(`[data-campaign-id="${campaign.id}"]`);
+
+                if (!campaignCard) {
+                    campaignCard = document.createElement('div');
+                    campaignCard.classList.add('campaign-card');
+                    campaignCard.dataset.campaignId = campaign.id;
+                    completedCampaignsListDiv.appendChild(campaignCard);
+                }
+                updateCampaignCard(campaignCard, campaign, true); // true: tamamlanmış
+            });
+        }
+
+        // Eski tamamlanmış kampanyaları kaldır
+        existingCompletedCampaignIds.forEach(id => {
+            if (!newCompletedCampaignIds.has(id)) {
+                const cardToRemove = completedCampaignsListDiv.querySelector(`[data-campaign-id="${id}"]`);
+                if (cardToRemove) {
+                    cardToRemove.remove();
+                }
+                // Tamamlanmış kampanyaların zaten interval'i olmamalı ama yine de temizleyelim
+                if (countdownIntervals[id]) {
+                    clearInterval(countdownIntervals[id]);
+                    delete countdownIntervals[id];
+                }
+            }
+        });
+
+
+    } catch (error) {
+        console.error('Kampanyalar çekilirken hata:', error);
+        showNotification("Kampanyalar yüklenirken sunucuya ulaşılamadı. Lütfen sunucu durumunu kontrol edin.", "error");
+        activeCampaignsListDiv.innerHTML = '<p>Aktif kampanyalar yüklenirken sunucuya ulaşılamadı. Lütfen sunucu durumunu kontrol edin.</p>';
+        completedCampaignsListDiv.innerHTML = '<p>Tamamlanmış kampanyalar yüklenirken sunucuya ulaşılamadı. Lütfen sunucu durumunu kontrol edin.</p>';
+        Object.values(countdownIntervals).forEach(clearInterval);
+        countdownIntervals = {};
+    }
 }
 
-// --- Kullanıcı Bildirim Fonksiyonu ---
-// showNotification fonksiyonu common.js'e taşındı. Burada tekrar tanımlanmayacak.
-// function showNotification(message, type = 'success') { ... }
+// Kampanya kartını oluşturan veya güncelleyen yeni bir yardımcı fonksiyon
+function updateCampaignCard(campaignCard, campaign, isCompletedSection = false) {
+    const progressPercent = (campaign.currentQuantity / campaign.targetQuantity) * 100;
+    const isCampaignActuallyCompleted = campaign.status === 'COMPLETED' || campaign.currentQuantity >= campaign.targetQuantity || (campaign.endDate && new Date(campaign.endDate) <= new Date());
 
-// --- Form Girişlerini Akıllı Hale Getirme --- (Aynı kaldı)
-function formatCardNumber(event) {
-    let input = event.target.value.replace(/\D/g, '');
-    input = input.substring(0, 16);
-    let formattedInput = '';
-    for (let i = 0; i < input.length; i++) {
-        if (i > 0 && i % 4 === 0) {
-            formattedInput += ' ';
+    const buttonText = isCampaignActuallyCompleted ? "Kampanya Tamamlandı" : "Satın Al / Katıl";
+    const buttonDisabled = isCampaignActuallyCompleted;
+
+    campaignCard.innerHTML = `
+        <h2>${campaign.product ? campaign.product.name : 'Ürün Adı Yok'}</h2>
+        <img class="product-img" src="${campaign.product ? campaign.product.imageUrl : 'https://via.placeholder.com/300x200?text=No+Image'}" alt="${campaign.product ? campaign.product.name : 'Ürün'}" />
+        <p>Hedef Fiyat: <strong>${campaign.campaignPrice.toFixed(2)} TL</strong></p>
+        <div class="progress-bar">
+            <div class="progress" style="width: ${progressPercent}%;"></div>
+        </div>
+        <div class="count-info">
+            <span class="current-count">${campaign.currentQuantity}</span> / ${campaign.targetQuantity} adet toplandı
+        </div>
+        <div class="countdown-timer info">
+            ${isCampaignActuallyCompleted ? 'Durum: Tamamlandı' : 'Kampanyanın bitmesine kalan süre: <span class="time-left"></span>'}
+        </div>
+        <button class="buy-button primary-button" data-campaign-id="${campaign.id}" ${buttonDisabled ? 'disabled' : ''}>${buttonText}</button>
+        <div class="campaign-info note">
+            Katılım sayısı hedefe ulaşmazsa, tüm katılımcılara para iadesi yapılacaktır.
+        </div>
+    `;
+
+    const buyButtonForCampaign = campaignCard.querySelector('.buy-button');
+    const timeLeftSpan = campaignCard.querySelector(".time-left");
+
+    // Sadece aktif bölümde veya henüz tamamlanmamış kampanyalar için geri sayım
+    if (!isCompletedSection && !isCampaignActuallyCompleted) {
+        if (!countdownIntervals[campaign.id]) {
+            const updateStatusForThisCampaign = () => {
+                const hasTimeLeft = updateCountdown(campaignCard, campaign.endDate);
+                if (!hasTimeLeft) {
+                    clearInterval(countdownIntervals[campaign.id]);
+                    delete countdownIntervals[campaign.id];
+                    // Süre dolduğunda butonu ve metni tekrar güncelle
+                    if (buyButtonForCampaign) {
+                        buyButtonForCampaign.disabled = true;
+                        buyButtonForCampaign.innerText = "Kampanya Süresi Doldu";
+                    }
+                    if (timeLeftSpan) timeLeftSpan.innerText = "Süre doldu!";
+                }
+            };
+            updateStatusForThisCampaign(); // İlk güncelleme anında yap
+            countdownIntervals[campaign.id] = setInterval(updateStatusForThisCampaign, 1000);
         }
-        formattedInput += input[i];
-    }
-    event.target.value = formattedInput;
-}
-
-function formatExpiryDate(event) {
-    let input = event.target.value.replace(/\D/g, '');
-    input = input.substring(0, 4);
-    if (input.length > 2) {
-        event.target.value = input.substring(0, 2) + '/' + input.substring(2);
     } else {
-        event.target.value = input;
+        // Tamamlanmış bölümde veya tamamlanmış kampanyalar için sayacı durdur
+        if (countdownIntervals[campaign.id]) {
+            clearInterval(countdownIntervals[campaign.id]);
+            delete countdownIntervals[campaign.id];
+        }
+    }
+
+    // Satın al butonuna olay dinleyici ekle (her zaman yeniden eklenir, önceki kaldırılır)
+    if (buyButtonForCampaign) {
+        const oldButton = buyButtonForCampaign;
+        const newButton = oldButton.cloneNode(true); // Listener'ları temizlemek için klonla
+        oldButton.parentNode.replaceChild(newButton, oldButton);
+
+        if (!buttonDisabled) { // Sadece etkinse listener ekle
+            newButton.addEventListener('click', (event) => {
+                const campaignId = event.target.dataset.campaignId;
+                handleBuyButtonClick(campaignId);
+            });
+        }
     }
 }
 
 
-// --- Olay Dinleyicileri ve Form İşlemleri ---
-
-// Satın al butonuna tıklayınca modal'ı aç
-document.getElementById("buy-button").addEventListener("click", () => {
-    // getUserToken common.js'den gelecek
-    const token = getUserToken(); // `getUserToken()` common.js'den geliyor
+// Satın al butonuna tıklayınca modal'ı açan fonksiyon (Değişmedi)
+function handleBuyButtonClick(campaignId) {
+    const token = getUserToken(); // common.js'den geliyor
 
     if (!token) {
-        // Kullanıcı giriş yapmamışsa, login sayfasına yönlendir
-        if (typeof showNotification === 'function') {
-            showNotification("Kampanyaya katılmak için lütfen giriş yapın veya kayıt olun.", "error");
-        } else {
-            alert("Kampanyaya katılmak için lütfen giriş yapın veya kayıt olun.");
-        }
+        showNotification("Kampanyaya katılmak için lütfen giriş yapın veya kayıt olun.", "error");
         setTimeout(() => {
-            window.location.href = 'login.html'; // Yönlendirme
+            window.location.href = 'login.html';
         }, 1500);
         return;
     }
 
-    // Kullanıcı giriş yapmışsa modalı aç
     const purchaseModal = document.getElementById("purchaseModal");
     if (purchaseModal) {
+        purchaseModal.dataset.selectedCampaignId = campaignId; // Seçilen kampanya ID'sini modal'a kaydet
         purchaseModal.style.display = "flex"; // Modal'ı görünür yap
+
         const modalNotificationDiv = document.getElementById('modal-notification');
         if (modalNotificationDiv) {
             modalNotificationDiv.classList.remove('visible', 'success', 'error');
             modalNotificationDiv.style.display = 'none';
         }
     }
-});
+}
 
-
-// Modal kapatma butonuna tıklayınca modal'ı kapat (Aynı kaldı)
+// Modal kapatma butonuna tıklayınca modal'ı kapat (Değişmedi)
 document.getElementById("closeModal").addEventListener("click", () => {
-  document.getElementById("purchaseModal").style.display = "none";
+    document.getElementById("purchaseModal").style.display = "none";
 });
 
-// Satın alma formunun submit işlemi
+// Satın alma formunun submit işlemi (Değişmedi)
 document.getElementById("purchaseForm").addEventListener("submit", async function(e) {
-  e.preventDefault();
+    e.preventDefault();
 
-  const form = e.target;
-  const submitButton = form.querySelector('button[type="submit"]');
+    const form = e.target;
+    const submitButton = form.querySelector('button[type="submit"]');
 
-  submitButton.disabled = true;
-  submitButton.innerHTML = 'İşleniyor... <span class="spinner"></span>';
-  submitButton.classList.add('loading');
+    submitButton.disabled = true;
+    submitButton.innerHTML = 'İşleniyor... <span class="spinner"></span>';
+    submitButton.classList.add('loading');
 
-  const modalNotificationDiv = document.getElementById('modal-notification');
-  if (modalNotificationDiv) { // modalNotificationDiv'in varlığını kontrol et
-      modalNotificationDiv.classList.remove('visible', 'success', 'error');
-      modalNotificationDiv.style.display = 'none';
-  }
-
-  const name = document.getElementById('fullName').value.trim();
-  const email = document.getElementById('userEmail').value.trim();
-  const card = document.getElementById('cardNumber').value.trim().replace(/\s/g, '');
-  const exp = document.getElementById('expiryDate').value.trim();
-  const cvc = document.getElementById('cvcCode').value.trim();
-
-  // Frontend Doğrulamaları (Aynı kaldı)
-  if (!name || !email || !card || !exp || !cvc) {
-      if (typeof showNotification === 'function') {
-          showNotification("Lütfen tüm alanları doldurun.", "error", 'modal-notification'); // modal'a özel bildirim
-      } else {
-          alert("Lütfen tüm alanları doldurun.");
-      }
-      submitButton.disabled = false;
-      submitButton.innerHTML = 'Katıl ve Öde';
-      submitButton.classList.remove('loading');
-      return;
-  }
-  if (!/\S+@\S+\.\S+/.test(email)) {
-      if (typeof showNotification === 'function') {
-          showNotification("Lütfen geçerli bir e-posta adresi girin.", "error", 'modal-notification');
-      } else {
-          alert("Lütfen geçerli bir e-posta adresi girin.");
-      }
-      submitButton.disabled = false;
-      submitButton.innerHTML = 'Katıl ve Öde';
-      submitButton.classList.remove('loading');
-      return;
-  }
-  if (card.length !== 16 || isNaN(card)) {
-      if (typeof showNotification === 'function') {
-          showNotification("Lütfen 16 haneli geçerli bir kart numarası girin.", "error", 'modal-notification');
-      } else {
-          alert("Lütfen 16 haneli geçerli bir kart numarası girin.");
-      }
-      submitButton.disabled = false;
-      submitButton.innerHTML = 'Katıl ve Öde';
-      submitButton.classList.remove('loading');
-      return;
-  }
-  if (!/^\d{2}\/\d{2}$/.test(exp)) {
-      if (typeof showNotification === 'function') {
-          showNotification("Lütfen geçerli bir son kullanma tarihi (AA/YY) girin.", "error", 'modal-notification');
-      } else {
-          alert("Lütfen geçerli bir son kullanma tarihi (AA/YY) girin.");
-      }
-      submitButton.disabled = false;
-      submitButton.innerHTML = 'Katıl ve Öde';
-      submitButton.classList.remove('loading');
-      return;
-  }
-  if (cvc.length !== 3 || isNaN(cvc)) {
-      if (typeof showNotification === 'function') {
-          showNotification("Lütfen 3 haneli geçerli bir CVC kodu girin.", "error", 'modal-notification');
-      } else {
-          alert("Lütfen 3 haneli geçerli bir CVC kodu girin.");
-      }
-      submitButton.disabled = false;
-      submitButton.innerHTML = 'Katıl ve Öde';
-      submitButton.classList.remove('loading');
-      return;
-  }
-
-  // Token'ı Authorization header'ına ekle
-  // getUserToken common.js'den gelecek
-  const token = getUserToken();
-  if (!token) {
-    if (typeof showNotification === 'function') {
-        showNotification("Giriş yapmadığınız için işlem yapılamadı. Lütfen tekrar giriş yapın.", "error", 'modal-notification');
-    } else {
-        alert("Giriş yapmadığınız için işlem yapılamadı. Lütfen tekrar giriş yapın.");
+    const modalNotificationDiv = document.getElementById('modal-notification');
+    if (modalNotificationDiv) {
+        modalNotificationDiv.classList.remove('visible', 'success', 'error');
+        modalNotificationDiv.style.display = 'none';
     }
-    submitButton.disabled = false;
-    submitButton.innerHTML = 'Katıl ve Öde';
-    submitButton.classList.remove('loading');
-    setTimeout(() => {
-        window.location.href = 'login.html';
-    }, 1500);
-    return;
-  }
 
-  const data = { name, email, card, exp, cvc };
+    const selectedCampaignId = document.getElementById('purchaseModal').dataset.selectedCampaignId;
+    if (!selectedCampaignId) {
+        showNotification("Bir kampanya seçilmedi. Lütfen sayfayı yenileyip tekrar deneyin.", "error", 'modal-notification');
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Katıl ve Öde';
+        submitButton.classList.remove('loading');
+        return;
+    }
 
-  try {
-    const res = await fetch(`${BASE_URL}/join`, { // BASE_URL common.js'den kullanılacak
-      method: "POST",
-      headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` // TOKEN BURAYA EKLENDİ!
-      },
-      body: JSON.stringify(data)
+    const name = document.getElementById('fullName').value.trim();
+    const email = document.getElementById('userEmail').value.trim();
+    const card = document.getElementById('cardNumber').value.trim().replace(/\s/g, '');
+    const exp = document.getElementById('expiryDate').value.trim();
+    const cvc = document.getElementById('cvcCode').value.trim();
+
+    // Frontend Doğrulamaları
+    if (!name || !email || !card || !exp || !cvc) {
+        showNotification("Lütfen tüm alanları doldurun.", "error", 'modal-notification');
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Katıl ve Öde';
+        submitButton.classList.remove('loading');
+        return;
+    }
+    if (!/\S+@\S+\.\S+/.test(email)) {
+        showNotification("Lütfen geçerli bir e-posta adresi girin.", "error", 'modal-notification');
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Katıl ve Öde';
+        submitButton.classList.remove('loading');
+        return;
+    }
+    if (card.length !== 16 || isNaN(card)) {
+        showNotification("Lütfen 16 haneli geçerli bir kart numarası girin.", "error", 'modal-notification');
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Katıl ve Öde';
+        submitButton.classList.remove('loading');
+        return;
+    }
+    if (!/^\d{2}\/\d{2}$/.test(exp)) {
+        showNotification("Lütfen geçerli bir son kullanma tarihi (AA/YY) girin.", "error", 'modal-notification');
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Katıl ve Öde';
+        submitButton.classList.remove('loading');
+        return;
+    }
+    if (cvc.length !== 3 || isNaN(cvc)) {
+        showNotification("Lütfen 3 haneli geçerli bir CVC kodu girin.", "error", 'modal-notification');
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Katıl ve Öde';
+        submitButton.classList.remove('loading');
+        return;
+    }
+
+    const token = getUserToken();
+    if (!token) {
+        showNotification("Giriş yapmadığınız için işlem yapılamadı. Lütfen tekrar giriş yapın.", "error", 'modal-notification');
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Katıl ve Öde';
+        submitButton.classList.remove('loading');
+        setTimeout(() => { window.location.href = 'login.html'; }, 1500);
+        return;
+    }
+
+    // Kullanıcının kayıtlı adreslerini çek
+    let userAddresses = [];
+    try {
+        const addressRes = await fetch(`${BASE_URL}/addresses`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const addressData = await addressRes.json();
+        if (addressRes.ok && addressData.success && addressData.addresses && addressData.addresses.length > 0) {
+            userAddresses = addressData.addresses;
+        } else {
+            showNotification("Sipariş oluşturmak için kayıtlı adresiniz bulunmamaktadır. Lütfen Hesabım sayfasından adres ekleyin.", "error", 'modal-notification');
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Katıl ve Öde';
+            submitButton.classList.remove('loading');
+            return;
+        }
+    } catch (error) {
+        console.error("Adresler çekilirken hata:", error);
+        showNotification("Adres bilgileri alınamadı. Lütfen internet bağlantınızı kontrol edin.", "error", 'modal-notification');
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Katıl ve Öde';
+        submitButton.classList.remove('loading');
+        return;
+    }
+
+    // Varsayılan veya ilk adresi seç
+    const defaultAddress = userAddresses.find(addr => addr.isDefault) || userAddresses[0];
+    if (!defaultAddress) {
+        showNotification("Sipariş oluşturmak için bir varsayılan adresiniz olmalı veya adres eklemelisiniz.", "error", 'modal-notification');
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Katıl ve Öde';
+        submitButton.classList.remove('loading');
+        return;
+    }
+
+    // Backend'in `/orders` rotasına gönderilecek payload
+    const orderPayload = {
+        campaignId: selectedCampaignId, // Tıklanan kampanya ID'si
+        orderedQuantity: 1, // Şimdilik sabit 1 adet. Bir input alanı eklenebilir.
+        addressId: defaultAddress.id // Kullanıcının seçilen adresi
+    };
+
+    try {
+        const res = await fetch(`${BASE_URL}/orders`, { // /api/orders rotasına POST isteği
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(orderPayload)
+        });
+
+        const result = await res.json();
+        if (res.ok && result.success) { // Backend'den gelen yanıtın `success` property'sine göre kontrol
+            showNotification("Kampanyaya başarıyla katıldınız!", "success"); // Ana bildirim alanı
+            document.getElementById("purchaseModal").style.display = "none";
+            form.reset();
+            // Satın alma sonrası kampanya verilerini daha hızlı güncellemek için
+            fetchAndDisplayCampaigns(); // Kampanyaları tekrar yükle ki sayaçlar güncellensin
+        } else {
+            showNotification(result.message || "Bir hata oluştu. Lütfen tekrar deneyin.", "error", 'modal-notification');
+        }
+    } catch (err) {
+        console.error("Sipariş oluşturulurken hata:", err);
+        showNotification("Sipariş oluşturulurken sunucuya ulaşılamadı. Lütfen internet bağlantınızı kontrol edin.", "error", 'modal-notification');
+    } finally {
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Katıl ve Öde';
+        submitButton.classList.remove('loading');
+    }
+});
+
+// --- Sayfa Yükleme ve Başlangıç Ayarları ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Modalı sayfa yüklendiğinde gizle
+    const purchaseModal = document.getElementById("purchaseModal");
+    if (purchaseModal) {
+        purchaseModal.style.display = "none";
+    }
+
+    // Input alanlarına olay dinleyicileri ekle
+    document.querySelector('#purchaseForm #cardNumber').addEventListener('input', formatCardNumber);
+    document.querySelector('#purchaseForm #expiryDate').addEventListener('input', formatExpiryDate);
+    document.querySelector('#purchaseForm #fullName').addEventListener('input', (event) => {
+        const filteredValue = event.target.value.replace(/[^a-zA-ZğĞüÜşŞıİöÖçÇ\s-]/g, '');
+        event.target.value = filteredValue;
     });
 
-    const result = await res.json();
-    if (result.success) {
-      await fetchCurrentCountAndCampaignStatus();
-      if (typeof showNotification === 'function') {
-          showNotification("Kampanyaya başarıyla katıldınız!", "success"); // Ana bildirim alanı
-      } else {
-          alert("Kampanyaya başarıyla katıldınız!");
-      }
-      document.getElementById("purchaseModal").style.display = "none";
-      form.reset();
-    } else {
-      if (typeof showNotification === 'function') {
-          showNotification(result.message || "Bir hata oluştu. Lütfen tekrar deneyin.", "error", 'modal-notification');
-      } else {
-          alert(result.message || "Bir hata oluştu. Lütfen tekrar deneyin.");
-      }
-    }
-  } catch (err) {
-    console.error("Sunucuya ulaşılamadı veya istekte hata oluştu:", err);
-    if (typeof showNotification === 'function') {
-        showNotification("Sunucuya ulaşılamadı. Lütfen sunucu durumunu kontrol edin.", "error", 'modal-notification');
-    } else {
-        alert("Sunucuya ulaşılamadı. Lütfen sunucu durumunu kontrol edin.");
-    }
-  } finally {
-    submitButton.disabled = false;
-    submitButton.innerHTML = 'Katıl ve Öde';
-    submitButton.classList.remove('loading');
-  }
-});
+    // Sayfa yüklendiğinde kampanyaları çek ve listele
+    fetchAndDisplayCampaigns();
 
-// --- Sayfa Yükleme ve Başlangıç Ayarları --- (Güncellendi)
-document.addEventListener('DOMContentLoaded', () => {
-  // Modalı sayfa yüklendiğinde gizle
-  const purchaseModal = document.getElementById("purchaseModal");
-  if (purchaseModal) {
-      purchaseModal.style.display = "none";
-  }
-
-  // Input alanlarına olay dinleyicileri ekle (Aynı kaldı)
-  document.querySelector('input[placeholder="Kart numaranızı girin"]').addEventListener('input', formatCardNumber);
-  document.querySelector('input[placeholder="12/25"]').addEventListener('input', formatExpiryDate);
-  document.querySelector('input[placeholder="Adınızı ve Soyadınızı girin"]').addEventListener('input', (event) => {
-    // Sadece harflere, boşluklara ve tire işaretine izin ver
-    const filteredValue = event.target.value.replace(/[^a-zA-ZğĞüÜşŞıİöÖçÇ\s-]/g, '');
-    event.target.value = filteredValue;
-  });
-
-  // Navigasyon butonları için olay dinleyicileri common.js'e taşındı.
-  // Burada kalmış olanları kaldırıyoruz.
-  // document.getElementById('login-button').addEventListener('click', () => { ... });
-  // document.getElementById('register-button').addEventListener('click', () => { ... });
-  // document.getElementById('logout-button').addEventListener('click', () => { ... });
-
-  // Hem katılımcı sayısını hem de kampanya durumunu ilk yüklemede çek
-  fetchCurrentCountAndCampaignStatus();
-
-  // Geri sayımı her saniye güncellemek için interval başlat
-  window.countdownInterval = setInterval(updateCountdown, 1000);
-
-  // Katılımcı sayısını ve kampanya bitiş tarihini periyodik olarak güncelle (10 saniyede bir)
-  setInterval(fetchCurrentCountAndCampaignStatus, 10000);
-
-  // Sayfa yüklendiğinde navigasyonu güncelle - common.js'de çağrılıyor.
-  // updateNavigation(); // Bu da common.js'deki checkLoginStatus tarafından halledilecek.
+    // Kampanyaları ve sayaçları periyodik olarak güncelle (her 10 saniyede bir)
+    setInterval(fetchAndDisplayCampaigns, 10000);
 });

@@ -3,45 +3,51 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Toplu Alım Kampanyası</title>
-  <link rel="stylesheet" href="style.css"> 
+  <title>Toplu Alım Kampanyaları</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="top-nav">
-    <span id="welcome-message"></span>
-    <a href="login.html" id="login-button" class="button">Giriş Yap</a>
-    <a href="register.html" id="register-button" class="button">Kayıt Ol</a>
-    <a href="account.html" id="account-button" class="button">Hesabım</a>
-    <a href="admin.html" id="admin-button" class="button">Admin Paneli</a>
-    <a href="#" id="logout-button" class="button">Çıkış Yap</a>
+    <div class="logo">
+      <a href="/">
+        <img src="/logo.jpeg" alt="Birlikte Ucuz Logo" class="site-logo">
+      </a>
+    </div>
+    <div class="nav-buttons"> <a href="login.html" id="login-button" class="button">Giriş Yap</a>
+      <a href="register.html" id="register-button" class="button">Kayıt Ol</a>
+      <a href="account.html" id="account-button" class="button">Hesabım</a>
+      <a href="admin.html" id="admin-button" class="button">Admin Paneli</a>
+      <a href="#" id="logout-button" class="button">Çıkış Yap</a>
+    </div>
   </div>
+
   <div class="container">
     <div id="notification" style="display:none; padding: 10px; margin-top: 15px; border-radius: 8px; text-align: center; font-weight: bold;"></div>
-    <h1>Çamaşır Makinesi Toplu Alım Kampanyası</h1>
+    
+    <section class="campaigns-section">
+        <h1>Mevcut Kampanyalar</h1>
+        <div id="active-campaigns-list" class="campaign-grid">
+            <p>Aktif kampanyalar yükleniyor...</p>
+        </div>
+    </section>
 
-    <img class="product-img" src="https://statics.vestel.com.tr/productimages/20265388_r1_1000_1000.jpg" alt="Çamaşır Makinesi" />
+    <section class="campaigns-section" style="margin-top: 40px;"> <h1>Tamamlanmış Kampanyalar</h1>
+        <div id="completed-campaigns-list" class="campaign-grid">
+            <p>Tamamlanmış kampanyalar yükleniyor...</p>
+        </div>
+    </section>
 
-    <div class="progress-bar">
-      <div id="progress" class="progress"></div> </div>
-    <div id="count-info">
-      <span id="current-count">0</span> / 500 adet toplandı
-    </div>
+  </div>
 
-    <div id="countdown-timer" class="info"> Kampanyanın bitmesine kalan süre: <span id="time-left"></span>
-    </div>  
-
-    <button id="buy-button">Satın Al / Katıl</button>
-
-    <div id="campaign-info" class="note"> Katılım sayısı hedefe ulaşmazsa, tüm katılımcılara para iadesi yapılacaktır.
-    </div>
-  </div> <div id="purchaseModal" class="modal">
+  <div id="purchaseModal" class="modal">
     <div id="modalContent" class="modal-content">
       <span id="closeModal" class="close">&times;</span>
       <h2>Satın Alma Formu</h2>
-      
+
       <div id="modal-notification" style="display:none; padding: 10px; margin-bottom: 15px; border-radius: 8px; text-align: center; font-weight: bold;"></div>
 
       <form id="purchaseForm" novalidate>
@@ -65,5 +71,7 @@
     </div>
   </div>
 
-  <script src="common.js"></script> <script src="script.js"></script> </body>
+  <script src="common.js"></script>
+  <script src="script.js"></script>
+</body>
 </html>

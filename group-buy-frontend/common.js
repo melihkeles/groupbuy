@@ -155,3 +155,27 @@ function showNotification(message, type = 'success', notificationDivId = 'notifi
     }
     // account.html'deki 'account-notification' ve 'modal-address-notification' otomatik gizlenmeyecek.
 }
+
+// Input formatlama fonksiyonları
+function formatCardNumber(event) {
+    let input = event.target.value.replace(/\D/g, '');
+    input = input.substring(0, 16);
+    let formattedInput = '';
+    for (let i = 0; i < input.length; i++) {
+        if (i > 0 && i % 4 === 0) {
+            formattedInput += ' ';
+        }
+        formattedInput += input[i];
+    }
+    event.target.value = formattedInput;
+}
+
+function formatExpiryDate(event) {
+    let input = event.target.value.replace(/\D/g, '');
+    input = input.substring(0, 4);
+    if (input.length > 2) {
+        event.target.value = input.substring(0, 2) + '/' + input.substring(2);
+    } else {
+        event.target.value = input;
+    }
+}

@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  // Lütfen bu satırı şöyle değiştirin:
   output   = "../node_modules/.prisma/client" // <--- BU KESİNLİKLE DOĞRU OLMALI
 }
 
@@ -16,42 +15,107 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      String   @default("USER") // 'USER' veya 'ADMIN'
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  participations Participant[]
-  addresses    Address[]     // Kullanıcının sahip olduğu adresler
+  id            String          @id @default(uuid())
+  name          String
+  email         String          @unique
+  password      String
+  role          String          @default("USER") // 'USER' veya 'ADMIN'
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  addresses     Address[]       // Kullanıcının sahip olduğu adresler
+  orders        Order[]         // Kullanıcının verdiği siparişler
 }
 
-model Participant {
-  id        String   @id @default(uuid())
-  name      String
-  email      String
-  createdAt DateTime @default(now())
-  userId    String // ? kaldırıldı
-  user      User     @relation(fields: [userId], references: [id])
-}
-
-// Yeni Adres Modeli
 model Address {
-  id           String    @id @default(uuid())
-  userId       String
-  user         User      @relation(fields: [userId], references: [id])
-  title        String?   // Ev, İş, Ofis gibi başlık
-  fullName     String    // Ad Soyad (teslim alacak kişinin)
-  phone        String    // Telefon numarası
-  country      String    // Ülke (şimdilik TR olabilir)
-  city         String    // Şehir
-  district     String?   // İlçe
-  neighborhood String?   // Mahalle
-  addressLine1 String    // Adres satırı 1 (Cadde, Sokak, Bina No)
-  addressLine2 String?   // Adres satırı 2 (Daire No, Kat)
-  zipCode      String?   // Posta Kodu
-  isDefault    Boolean   @default(false) // Varsayılan adres mi?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id            String          @id @default(uuid())
+  userId        String
+  user          User            @relation(fields: [userId], references: [id])
+  title         String?         // Ev, İş, Ofis gibi başlık
+  fullName      String          // Ad Soyad (teslim alacak kişinin)
+  phone         String          // Telefon numarası
+  country       String          // Ülke (şimdilik TR olabilir)
+  city          String          // Şehir
+  district      String?         // İlçe
+  neighborhood  String?         // Mahalle
+  addressLine1  String          // Adres satırı 1 (Cadde, Sokak, Bina No)
+  addressLine2  String?         // Adres satırı 2 (Daire No, Kat)
+  zipCode       String?         // Posta Kodu
+  isDefault     Boolean         @default(false) // Varsayılan adres mi?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  orders        Order[]         // Bu adrese teslim edilecek siparişler (opsiyonel)
+}
+
+model Product {
+  id              String    @id @default(uuid())
+  name            String
+  description     String?   @db.Text
+  sku             String?   @unique
+  imageUrl        String?
+  priceRetail     Float     // Ürünün perakende fiyatı (referans amaçlı, doğrudan satılmaz)
+  stockQuantity   Int
+  category        String?
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  campaigns       Campaign[]
+}
+
+enum CampaignStatus {
+  ACTIVE
+  COMPLETED   // Hedef sayıya ulaşıldı
+  FAILED      // Hedef sayıya ulaşılamadı
+  CANCELED    // Yönetici tarafından iptal edildi
+}
+
+model Campaign {
+  id                  String          @id @default(uuid())
+  productId           String
+  product             Product         @relation(fields: [productId], references: [id])
+  targetQuantity      Int             // Hedef sipariş adedi
+  currentQuantity     Int             @default(0) // Mevcut sipariş adedi
+  startDate           DateTime        @default(now())
+  endDate             DateTime        // Kampanyanın bitiş tarihi
+  status              CampaignStatus  @default(ACTIVE)
+  campaignPrice       Float           // Müşterinin bu kampanyadan ürünü satın almak için ÖDEYECEĞİ FİYAT.
+                                      // Eğer kampanya başarılı olursa bu fiyattan satın alınmış olur.
+                                      // Başarısız olursa bu fiyat iade edilir.
+  minOrderQuantity    Int             @default(1)
+  maxOrderQuantity    Int?
+
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  orders              Order[]
+}
+
+enum OrderStatus {
+  PENDING           // Ödeme bekleniyor (opsiyonel, ödeme entegrasyonuna bağlı)
+  PAID              // Ödeme alındı, kampanya sonucu bekleniyor
+  PROCESSING        // Kampanya tamamlandı (başarılı), sipariş işleniyor
+  SHIPPED           // Sipariş kargoya verildi
+  DELIVERED         // Sipariş teslim edildi
+  REFUND_INITIATED  // İade süreci başlatıldı (kampanya başarısız veya iptal)
+  REFUNDED          // Para iadesi yapıldı (kampanya başarısız veya iptal)
+  CANCELED          // Sipariş iptal edildi (kullanıcı veya yönetici tarafından)
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  campaignId  String
+  campaign    Campaign    @relation(fields: [campaignId], references: [id])
+  quantity    Int         // Kullanıcının sipariş ettiği ürün adedi
+  unitPrice   Float       // Sipariş anındaki ürünün birim fiyatı (Campaign.campaignPrice'dan kopyalanır)
+  totalAmount Float       // Toplam tutar (quantity * unitPrice)
+  status      OrderStatus @default(PENDING) // Başlangıç durumu
+  orderDate   DateTime    @default(now())
+
+  addressId   String?
+  address     Address?    @relation(fields: [addressId], references: [id])
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 }

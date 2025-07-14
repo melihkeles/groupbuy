@@ -1,3 +1,4 @@
+// group-buy-backend/routes/address.js
 const express = require('express');
 const { authMiddleware } = require('../middlewares/authMiddleware'); // authMiddleware'ı import et
 
@@ -9,12 +10,13 @@ router.use(authMiddleware);
 // --- Adres Yönetimi Rotaları ---
 
 // 1. Kullanıcının tüm adreslerini listeleme (GET /api/addresses)
+// Bu rota artık direkt olarak kullanıcının kendi adreslerini getirecek.
+// URL: /api/addresses
 router.get('/', async (req, res) => {
-  const prisma = req.prisma;
   const userId = req.user.userId; // authMiddleware'dan gelen userId
 
   try {
-    const addresses = await prisma.address.findMany({
+    const addresses = await req.prisma.address.findMany({
       where: {
         userId: userId
       },
@@ -30,8 +32,8 @@ router.get('/', async (req, res) => {
 });
 
 // 2. Yeni adres ekleme (POST /api/addresses)
+// URL: /api/addresses
 router.post('/', async (req, res) => {
-  const prisma = req.prisma;
   const userId = req.user.userId;
   const { title, fullName, phone, country, city, district, neighborhood, addressLine1, addressLine2, zipCode, isDefault } = req.body;
 
@@ -43,7 +45,7 @@ router.post('/', async (req, res) => {
   try {
     // Eğer isDefault true ise, kullanıcının mevcut varsayılan adresini false yap
     if (isDefault) {
-      await prisma.address.updateMany({
+      await req.prisma.address.updateMany({
         where: {
           userId: userId,
           isDefault: true
@@ -54,7 +56,7 @@ router.post('/', async (req, res) => {
       });
     }
 
-    const newAddress = await prisma.address.create({
+    const newAddress = await req.prisma.address.create({
       data: {
         userId: userId,
         title: title || null,
@@ -78,15 +80,15 @@ router.post('/', async (req, res) => {
 });
 
 // 3. Adres güncelleme (PUT /api/addresses/:id)
+// URL: /api/addresses/:id
 router.put('/:id', async (req, res) => {
-  const prisma = req.prisma;
   const userId = req.user.userId;
   const { id } = req.params; // Güncellenecek adresin ID'si
   const { title, fullName, phone, country, city, district, neighborhood, addressLine1, addressLine2, zipCode, isDefault } = req.body;
 
   try {
     // Güncellenecek adresin mevcut kullanıcıya ait olduğunu kontrol et
-    const existingAddress = await prisma.address.findFirst({
+    const existingAddress = await req.prisma.address.findFirst({
       where: {
         id: id,
         userId: userId
@@ -99,7 +101,7 @@ router.put('/:id', async (req, res) => {
 
     // Eğer isDefault true olarak ayarlanıyorsa, kullanıcının diğer varsayılan adreslerini false yap
     if (isDefault) {
-      await prisma.address.updateMany({
+      await req.prisma.address.updateMany({
         where: {
           userId: userId,
           isDefault: true,
@@ -117,7 +119,7 @@ router.put('/:id', async (req, res) => {
     }
 
 
-    const updatedAddress = await prisma.address.update({
+    const updatedAddress = await req.prisma.address.update({
       where: {
         id: id
       },
@@ -146,14 +148,14 @@ router.put('/:id', async (req, res) => {
 });
 
 // 4. Adres silme (DELETE /api/addresses/:id)
+// URL: /api/addresses/:id
 router.delete('/:id', async (req, res) => {
-  const prisma = req.prisma;
   const userId = req.user.userId;
   const { id } = req.params;
 
   try {
     // Silinecek adresin mevcut kullanıcıya ait olduğunu kontrol et
-    const existingAddress = await prisma.address.findFirst({
+    const existingAddress = await req.prisma.address.findFirst({
       where: {
         id: id,
         userId: userId
@@ -167,7 +169,7 @@ router.delete('/:id', async (req, res) => {
     // Eğer silinmek istenen adres varsayılan adres ise, ne yapılacağına karar ver
     // Şimdilik sadece silinmesine izin verelim. İleride, başka bir adres varsa onu varsayılan yapabiliriz.
     if (existingAddress.isDefault) {
-      const otherAddressesCount = await prisma.address.count({
+      const otherAddressesCount = await req.prisma.address.count({
           where: {
               userId: userId,
               NOT: { id: id }
@@ -175,7 +177,7 @@ router.delete('/:id', async (req, res) => {
       });
       if (otherAddressesCount > 0) {
           // Eğer başka adresler varsa, ilk bulduğumuzu varsayılan yapalım
-          const firstOtherAddress = await prisma.address.findFirst({
+          const firstOtherAddress = await req.prisma.address.findFirst({
               where: {
                   userId: userId,
                   NOT: { id: id }
@@ -185,7 +187,7 @@ router.delete('/:id', async (req, res) => {
               }
           });
           if (firstOtherAddress) {
-              await prisma.address.update({
+              await req.prisma.address.update({
                   where: { id: firstOtherAddress.id },
                   data: { isDefault: true }
               });
@@ -193,7 +195,7 @@ router.delete('/:id', async (req, res) => {
       }
     }
 
-    const deletedAddress = await prisma.address.delete({
+    const deletedAddress = await req.prisma.address.delete({
       where: {
         id: id
       }
